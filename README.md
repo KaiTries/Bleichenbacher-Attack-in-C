@@ -6,7 +6,7 @@ On mac gmp can be install with brew as seen below. It can also be downloaded fro
 brew install gmp
 ```
 
-To run compile the script simply run
+To build the script simply run:
 ```bash
 cc bleichenbacher_base.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
 ```
@@ -36,7 +36,7 @@ My VSC settings are as follows:
 }
 ```
 
-After compiling simply run
+After building you can execute the script with:
 ```bash
 ./a.out
 ```
