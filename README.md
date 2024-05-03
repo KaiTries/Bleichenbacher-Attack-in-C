@@ -1,6 +1,7 @@
-This is an implementation of the Bleichenbacher Attack in the C language. It utilizes the arbitrarily large integers by gmp. It focuses on the implementation of the algorithm. So N, d and e are hardcoded, and the padding is just repeating 1s.
+This is an implementation of the Bleichenbacher Attack in the C language. It utilizes the arbitrarily large integers by gmp. It focuses on the implementation of the algorithm. So a valid RSA Key pair is hardcoded, and the padding is just repeating 1s.
 
-I built it on mac so so all I had to do was 
+On mac gmp can be install with brew as seen below. It can also be downloaded from [here](https://gmplib.org/#DOWNLOAD).
+
 ```bash
 brew install gmp
 ```
@@ -35,7 +36,7 @@ My VSC settings are as follows:
 }
 ```
 
-After compiling simpliy run
+After compiling simply run
 ```bash
 ./a.out
 ```
