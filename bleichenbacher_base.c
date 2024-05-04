@@ -162,7 +162,7 @@ int add_pkcs_padding(char *input, char *output) {
 
     // add padding
     for (int i = strlen(input) + 1; i < RSA_BLOCK_BYTE_SIZE - 2; i++) {
-        output[i] = 0x01;
+        output[i] = 0x01; // 1 + rand() % 255;
     }
 
     return 0;
@@ -283,6 +283,7 @@ void findNewIntervals(IntervalSet *priorSet) {
     }
     free_interval_set(priorSet);
     *priorSet = set;
+    if (set.size > 1) printf("size of set: %zu", set.size);
 }
 
 void searchingWithOneIntervalLeft(IntervalSet *set) {
@@ -420,6 +421,8 @@ int main() {
         }
         j++;
     }
+
+
     end_time = clock();
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     printf("Amount of iterations: %d\n", j);
