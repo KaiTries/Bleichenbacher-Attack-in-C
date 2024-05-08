@@ -6,16 +6,16 @@ char N[] = "10625686190908130855068210749797558506604529867996501411897167327317
 int E = 65537;
 int TOTAL_REQUESTS = 0;
 
+char oracleString[RSA_BLOCK_BYTE_SIZE];
+
 mpz_t d, n, e, B, B2, B3, s, m, c, a, b, r, r1, r2, oracle_decrypted_input, c_prime;
 
-// Encrypt function
 void encrypt(mpz_t *output) {
     mpz_powm(*output, m, e, n);
 }
 
-// Decrypt function
-void decrypt(mpz_t input, mpz_t *output) {
-    mpz_powm(*output, input, d, n);
+void decrypt(mpz_t *input, mpz_t *output) {
+    mpz_powm(*output, *input, d, n);
 }
 
 void setup() {
@@ -46,36 +46,59 @@ void setup() {
     mpz_set_ui(s, 1);
 }
 
-int add_padding(char *pkcs_padded_input, char *user_input) {
+int add_padding(char *pkcs_padded_input, char *user_input_hex) {
     // check that user input is not longer than RSA_BLOCK_BYTE_SIZE - 11
-    if (strlen(user_input) > RSA_BLOCK_BYTE_SIZE - 11) {
+    if (strlen(user_input_hex) > RSA_BLOCK_BYTE_SIZE - 11) {
         printf("User input is too long\n");
         return -1;
     }
 
-    // add 0x00 byte at the end
-    pkcs_padded_input[RSA_BLOCK_BYTE_SIZE - 1] = 0x00;
-    pkcs_padded_input[RSA_BLOCK_BYTE_SIZE - 2] = 0x02;
+    pkcs_padded_input[0] = '0';
+    pkcs_padded_input[1] = '2';
 
-
-    // add the input
-    for (int i = 0; i < strlen(user_input); i++) {
-        pkcs_padded_input[i] = user_input[i];
+    for (int i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input_hex); i++) {
+        pkcs_padded_input[i] = '1'; // add randomness
     }
 
-    pkcs_padded_input[strlen(user_input)] = 0x00;
+    pkcs_padded_input[RSA_BLOCK_BYTE_SIZE - strlen(user_input_hex) - 1] = '0';
 
-    // add padding
-    for (int i = strlen(user_input) + 1; i < RSA_BLOCK_BYTE_SIZE - 2; i++) {
-        pkcs_padded_input[i] = 0x01; // 1 + rand() % 255;
+    for (int i = RSA_BLOCK_BYTE_SIZE - strlen(user_input_hex), t = 0; i < RSA_BLOCK_BYTE_SIZE; i++, t++) {
+        pkcs_padded_input[i] = user_input_hex[t];
     }
 
     return 0;
 }
 
-void print_hex(char *input, int length) {
-    for (int i = length - 1; i >= 0; i--) {
-        printf("%02x ", input[i]);
+void char_to_hex_array(char *user_input_hex,char *user_input) {
+    for (int i = 0; i < strlen(user_input); i++) {
+        sprintf(&user_input_hex[i * 2], "%02x", (unsigned char)user_input[i]);
     }
-    printf("\n");
+}
+
+void mpz_to_hex_array(char* hex_string, mpz_t number) {
+        mpz_get_str(hex_string, 16, number);
+        int len = strlen(hex_string);
+        if (len > RSA_BLOCK_BYTE_SIZE) {
+            exit(1);
+        }
+
+        if(len < RSA_BLOCK_BYTE_SIZE) {
+            size_t dif = RSA_BLOCK_BYTE_SIZE - len;
+
+            for (int i = len; i >= 0; i--) {
+                hex_string[i + dif] = hex_string[i];
+            }
+
+            for (size_t i = 0; i < dif; i++)
+            {
+                hex_string[i] = '0';
+            }
+            
+        }
+}
+
+int oracle(mpz_t number) {
+    mpz_to_hex_array(oracleString, number);
+    if(oracleString[0] != '0' || oracleString[1] != '2') return 0;
+    return 1;
 }
