@@ -7,6 +7,7 @@
 #define RSA_BLOCK_BYTE_SIZE 128
 #define RSA_PUBLIC_KEY_SIZE 1024
 #define RSA_PUBLIC_EXPONENT 65537
+#define TRIMMER_LIMIT 500
 
 
 // Interval data structure
@@ -28,9 +29,11 @@ double cpu_time_used, cpu_time_used_2;
 char D[] = "78913193811721706055797481363832150942743134067034761542313338748370726201033546287491574731373544676987613046861971631833989239967097513496626766533445786686631919564361097610399703352053354810041508557673189268121081384446559379257550457322913033120589771886529032181431944443148253890788094353860064363521";
 char N[] = "106256861909081308550682107497975585066045298679965014118971673273174972942084474092770696358687294491611957516687069256153520562535413990426290853022321612859805226173471895669079726027809218970486618822150156382823218043763245669403338643791786280745103610457180590091099463063822447698700065670969522057503";
 int E = 65537;
+int trimmerCounter = 0;
 int64_t TOTAL_REQUESTS = 0;
 
 mpz_t d, n, e, B, B2, B3, s, m, c, a, b, r, r1, r2, oracle_decrypted_input, c_prime;
+mpz_t t, u, t_inv, ul, ur, mintrim, maxtrim;
 
 
 /*** function declarations ***/ 
@@ -216,6 +219,108 @@ void decrypt(mpz_t input, mpz_t *output) {
     mpz_powm(*output, input, d, n);
 }
 
+
+int gcd(int u, int t) {
+    while(u!=t)
+    {
+        if(u > t)
+            u -= t;
+        else
+            t -= u;
+    }
+    return u;
+}
+
+int test1(int u, int t) {
+    if (gcd(u, t) == 1) {
+        return 1;
+    }
+    return 0;
+}
+
+
+int test2(int u_int, int t_int) {
+    mpz_set_ui(u, u_int);
+    mpz_set_ui(t, t_int);
+
+    mpz_invert(t_inv, t, n);
+    mpz_powm(a, u, e, n);
+    mpz_powm(b, t_inv, e ,n);
+
+    mpz_mul(c_prime, a, b);
+    mpz_mul(c_prime, c_prime, c);
+    mpz_mod(c_prime, c_prime, n);
+    trimmerCounter++;
+    if (oracle(c_prime)) return 1;
+    return 0;
+}
+
+int lcm(int *a, int length) {
+    int lcm = a[0];
+    for(int i = 1; i < length; i++) {
+        lcm = (lcm * a[i]) / gcd(lcm, a[i]);
+    }
+    return lcm;
+}
+
+int floor_div(int a, int b) {
+    int d = a / b;
+    int r = a % b; 
+    return r ? (d - ((a < 0) ^ (b < 0))) : d;
+}
+int ceil_div(int a, int b) {
+    int d = a / b;
+    int r = a % b;  
+    return r ? (d + ((a > 0) ^ (b < 0))) : d;
+}
+
+
+// find trimmers
+void trimmmers() {
+    int idx = 0;
+    int trimmersfrac[TRIMMER_LIMIT];
+
+    trimmersfrac[idx++] = 1;
+
+    for(int t = 3; t <4097; t++) {
+        if (trimmerCounter < TRIMMER_LIMIT) {
+            for(int u = t - 1; u < (t + 1) + 1; u++) {
+                if (trimmerCounter < TRIMMER_LIMIT && (u / (double) t) > (2 / 3.0) && (u / (double) t) < (3 / 2.0)) {
+                    if (test1(u,t) && test2(u,t)) {
+                        trimmersfrac[idx++] = t;
+                        break;
+                    } else continue;
+                } else continue;
+            }
+        } else break;
+    }
+    int denom = lcm(trimmersfrac, idx);
+    mpz_set_ui(t, denom);
+    
+    int lowerbottom = floor_div((2 * denom), 3);
+    int lowertop = denom;
+    while((lowertop - lowerbottom) != 1) {
+        int u = ceil_div((lowerbottom + lowertop), 2);
+        if (test2(u, denom)) lowertop = u;
+        else lowerbottom = u;
+    }
+    int ulower = lowertop;
+    mpz_set_ui(ul, ulower);
+
+    int upperbottom = denom;
+    int uppertop = ceil_div((3 * denom), 2);
+    while(upperbottom + 1 != uppertop) {
+        int u = floor_div((upperbottom + uppertop), 2);
+        if (test2(u, denom)) upperbottom = u;
+        else uppertop = u;
+    }
+    int uupper = upperbottom;
+    mpz_set_ui(ur, uupper);
+
+    mpz_fdiv_q(mintrim, t, ul);
+    mpz_cdiv_q(maxtrim, t, ur);
+}
+
 // Find s that satisfies the oracle
 void findNextS() {
     mpz_powm(c_prime, s, e, n);
@@ -342,6 +447,13 @@ int main() {
     mpz_init(c_prime);
     mpz_init(oracle_decrypted_input);
 
+    mpz_init(t);
+    mpz_init(u);
+    mpz_init(t_inv);
+    mpz_init(ul);
+    mpz_init(ur);
+    mpz_init(mintrim);
+    mpz_init(maxtrim);
 
     mpz_set_ui(e, E);
     mpz_set_str(d,D, 10);
@@ -376,19 +488,18 @@ int main() {
 
     // SETUP FOR THE ATTACK
     // Initial s value
-    mpz_cdiv_q(s, n, B3);
 
 
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t a, b;
+    Interval interval;
+    IntervalSet set;
+
+
     mpz_init_set(a,B2);
     mpz_init_set(b,B3);
     mpz_sub_ui(b, b, 1);
-    Interval interval;
-    init_interval(&interval, a, b);
-    IntervalSet set;
-    init_interval_set(&set);
-    add_interval(&set, interval);
+
 
     int times2b = 0;
     int times2c = 0;
@@ -397,12 +508,22 @@ int main() {
     printf("\n\n----------- Starting the Attack -----------\n\n");
     start_time = clock();
     start_time_2 = clock();
+    printf("\n\n----------- Trimming inital interval -----------\n\n");
+    trimmmers();
+    mpz_mul(a, a, mintrim);
+    mpz_mul(b, b, maxtrim);
+    init_interval(&interval, a, b);
+    init_interval_set(&set);
+    add_interval(&set, interval);
+
+    mpz_add(s, n, B2);
+    mpz_cdiv_q(s, s, b);
+
     printf("\n\n----------- Step 2a. -----------\n\n");
     findNextS();
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
-            printf("\n\n----------- Step 2b. -----------\n\n");
             mpz_add_ui(s, s, 1);
             findNextS();
             times2b++;
@@ -414,11 +535,9 @@ int main() {
                 print_string(decrypted_input_char, RSA_BLOCK_BYTE_SIZE);
                 break;
             }
-            printf("\n\n----------- Step 2c. -----------\n\n");
             searchingWithOneIntervalLeft(&set);
             times2c++;
         }
-        printf("\n\n----------- Step 3. -----------\n\n");
         findNewIntervals(&set);
 
         if (set.size == 0) {
