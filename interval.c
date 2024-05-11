@@ -58,8 +58,8 @@ int reunion(Interval* res, Interval* a, Interval* b) {
 }
 
 int in(Interval* interval, mpz_t val) {
-    if (mpz_cmp(interval->lower, val) > 0) return 0;
-    if (mpz_cmp(interval->upper, val) < 0) return 0;
+    if (mpz_cmp(interval->lower, val) >= 0) return 0;
+    if (mpz_cmp(interval->upper, val) <= 0) return 0;
     return 1; 
 }
 
@@ -109,8 +109,6 @@ void add_at_index(IntervalSet *set, Interval* interval) {
 
 void add_interval(IntervalSet* set, Interval* interval) {
     ensure_capacity(set);
-
-
     if (set->size == 0) {
         set->intervals[0] = *interval;
         set->size++;
@@ -123,6 +121,8 @@ void add_interval(IntervalSet* set, Interval* interval) {
 
     for (i = 0; i < set->size; i++)
     {   
+        if (in(&set->intervals[i], interval->lower) && in(&set->intervals[i], interval->upper)) return;
+
         if(left == -1 && overlap(&set->intervals[i], interval)) {
             left = i;
             right = i;
@@ -154,4 +154,12 @@ void print_intervalSet(IntervalSet* set) {
     {
         print_interval(set->intervals[i]);
     }
+}
+
+void free_interval_set(IntervalSet *set) {
+    for (size_t i = 0; i < set->size; i++) {
+        mpz_clear(set->intervals[i].lower);
+        mpz_clear(set->intervals[i].upper);
+    }
+    free(set->intervals);
 }

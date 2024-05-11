@@ -8,7 +8,7 @@ brew install gmp
 
 To build the script simply run:
 ```bash
-cc bleichenbacher_base.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
+cc main.c interval.c bleichenbacher_base.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
 ```
 You might have to adjust the paths to the include and library folders.
 My VSC settings are as follows:

@@ -42,3 +42,5 @@ void add_at_index(IntervalSet *set, Interval* interval);
 void add_interval(IntervalSet* set, Interval* interval);
 
 void print_intervalSet(IntervalSet* set);
+
+void free_interval_set(IntervalSet *set);
