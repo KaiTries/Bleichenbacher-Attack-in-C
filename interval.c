@@ -58,8 +58,8 @@ int reunion(Interval* res, Interval* a, Interval* b) {
 }
 
 int in(Interval* interval, mpz_t val) {
-    if (mpz_cmp(interval->lower, val) >= 0) return 0;
-    if (mpz_cmp(interval->upper, val) <= 0) return 0;
+    if (mpz_cmp(interval->lower, val) > 0) return 0;
+    if (mpz_cmp(interval->upper, val) < 0) return 0;
     return 1; 
 }
 
@@ -130,8 +130,7 @@ void add_interval(IntervalSet* set, Interval* interval) {
             right = i;
         }
 
-    }
-
+    }    
     Interval temp;
     if(left != -1 && right != left) {
         reunion(&temp,&set->intervals[left],interval);
@@ -162,4 +161,5 @@ void free_interval_set(IntervalSet *set) {
         mpz_clear(set->intervals[i].upper);
     }
     free(set->intervals);
+    set->size = 0;
 }

@@ -43,8 +43,6 @@ void setup() {
     mpz_init(bb);
     mpz_init(c_prime);
     mpz_init(oracle_decrypted_input);
-
-
 }
 
 int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
@@ -175,7 +173,6 @@ void findNewIntervals(IntervalSet *priorSet) {
             if (mpz_cmp(a, b) <= 0) {
                 set_interval(&interval, a, b);
                 add_interval(&set, &interval);
-
             }
 
         }

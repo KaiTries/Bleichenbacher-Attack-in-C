@@ -1,6 +1,7 @@
 #pragma once
 #include <gmp.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 
 
