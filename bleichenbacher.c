@@ -1,9 +1,5 @@
 #include "bleichenbacher.h"
 
-
-int TOTAL_REQUESTS = 0;
-
-
 mpz_t B, B2, B3, s;
 RSA rsa;
 
@@ -80,7 +76,6 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
             if(oracle(&c_prime, &rsa)) {
                 return;
             }
-            TOTAL_REQUESTS++;
         }
         mpz_add_ui(r,r,1);
     }    

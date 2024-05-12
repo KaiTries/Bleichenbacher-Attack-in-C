@@ -57,12 +57,7 @@ int main() {
     print("===============================================================");
 
     encrypt(&c, &m, &rsa);
-    mpz_to_hex_array(encrypted_input, &c);
-
-    print("this is the original input encrypted with RSA displayed as hex");
-    print(encrypted_input);
-    print("===============================================================");
-
+    
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t a, b;
     mpz_init_set(a,B2);
@@ -93,8 +88,10 @@ int main() {
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
                 if (mpz_cmp(m, set.intervals[0].lower) == 0) {
-                        gmp_printf("Decrypted message: %Zd\n", set.intervals[0].lower);
-                        printf("Decrypted message without padding: ");
+                        mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+                        printf("Decrypted message: ");
+                        print(decrypted_input_char);
+                        print("===============================================================");
                         break;
                 }
                 else {
