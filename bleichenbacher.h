@@ -1,29 +1,29 @@
 #pragma once
 #include "interval.h"
+#include "rsa.h"
 #include <stdio.h>
 #include <string.h>
 
-#define RSA_BLOCK_BYTE_SIZE 128
-#define RSA_PUBLIC_KEY_SIZE 1024
-#define RSA_PUBLIC_EXPONENT 65537
+extern mpz_t B, B2, B3, s;
+extern RSA rsa;
 
-extern mpz_t d, n, e, B, B2, B3, s, m, c, a, b, r, r1, r2, oracle_decrypted_input, c_prime;
-
-
+// sets up environment for the attack
 void setup();
 
-void encrypt();
-
-void decrypt(mpz_t output, mpz_t input);
-
+// turns user input into valid pkcs string
 int inputToPaddedMessage(char *pkcs_padded_input, char *user_input);
 
+// turns an mpz integer into its hex string representations
 void mpz_to_hex_array(char *hex_string, mpz_t number);
 
+// returns 1 if the given number is PKCS conforming
 int oracle(mpz_t number);
 
-void findNextS();
+// iteratively searches for the next bigger s that results in a valid PKCS message
+void findNextS(mpz_t c);
 
-void searchingWithOneIntervalLeft(IntervalSet *set);
+// searches the last Interval with given algorithm
+void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t c);
 
+// Finds new possible intervals
 void findNewIntervals(IntervalSet *priorSet);

@@ -132,6 +132,7 @@ void add_interval(IntervalSet* set, Interval* interval) {
 
     }    
     Interval temp;
+    init_interval(&temp);
     if(left != -1 && right != left) {
         reunion(&temp,&set->intervals[left],interval);
         reunion(&set->intervals[left],&temp,&set->intervals[right]);

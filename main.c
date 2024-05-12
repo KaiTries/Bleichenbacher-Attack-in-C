@@ -16,22 +16,27 @@ void print(char *string) {
     printf("%s\n",string);
 }
 
-void get_user_input(){
+/**
+ * Reads a line from standard input, pads the input using PKCS#1 v1.5 padding scheme, 
+ * and converts the padded input to an mpz_t integer.
+ */
+void get_user_input(mpz_t *m){
     fgets(user_input, sizeof(user_input), stdin);
     inputToPaddedMessage(pkcs_padded_input, user_input);
-    mpz_set_str(m, pkcs_padded_input, 16);
-
+    mpz_set_str(*m, pkcs_padded_input, 16);
 }
 
 int main() {
+    mpz_t m, c;
+    mpz_init(m); mpz_init(c);
+
     setup();
-    get_user_input();
+    get_user_input(&m);
     print("this is the original input with padding displayed in hex format");
     print(pkcs_padded_input);
     print("===============================================================");
 
-    
-    encrypt();
+    encrypt(&c, &m, &rsa);
     mpz_to_hex_array(encrypted_input, c);
 
     print("this is the original input encrypted with RSA displayed as hex");
@@ -58,13 +63,13 @@ int main() {
     start_time = clock();
     start_time_2 = clock();
     printf("\n\n----------- Step 2a. -----------\n\n");
-    findNextS();
+    findNextS(c);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
             printf("\n\n----------- Step 2b. -----------\n\n");
             mpz_add_ui(s, s, 1);
-            findNextS();
+            findNextS(c);
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
@@ -73,7 +78,7 @@ int main() {
                 break;
             }
             printf("\n\n----------- Step 2c. -----------\n\n");
-            searchingWithOneIntervalLeft(&set);
+            searchingWithOneIntervalLeft(&set, c);
             times2c++;
         }
         printf("\n\n----------- Step 3. -----------\n\n");
@@ -96,27 +101,10 @@ int main() {
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
-
-
-
-
-    mpz_clear(d);
-    mpz_clear(n);
-    mpz_clear(e);
-    mpz_clear(B);
-    mpz_clear(B2);
-    mpz_clear(B3);
-    mpz_clear(s);
     mpz_clear(m);
     mpz_clear(c);
     mpz_clear(a);
     mpz_clear(b);
-    mpz_clear(r);
-    mpz_clear(r1);
-    mpz_clear(r2);
-    mpz_clear(c_prime);
-    mpz_clear(oracle_decrypted_input);
-    free_interval_set(&set);
     return 0;
 }
 
