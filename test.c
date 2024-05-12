@@ -1,9 +1,15 @@
 #include "interval.h"
+#include "bleichenbacher.h"
 #include <time.h>
 #include <stdio.h>
 
 
-int main() {
+void print(char *string) {
+    printf("%s\n",string);
+}
+
+
+void interval_tests() {
     // initialize variables
     mpz_t a, b, c, d;
     mpz_init_set_ui(a, 1);
@@ -69,7 +75,95 @@ int main() {
     printf("=========================\n");
     print_intervalSet(&set);
     printf("=========================\n");
+
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(c);
+    mpz_clear(d);
+}
+
+void rsa_tests() {
+    setup();
+    mpz_t decrypted_input;
+    mpz_init(decrypted_input);
     
+    char pkcs_padded_input[300];
+    char pkcs_decrypted_input[300];
+    char message[] = "testMessage";
+
+    inputToPaddedMessage(pkcs_padded_input, message);
+    mpz_set_str(m, pkcs_padded_input, 16);
+    encrypt();
+    decrypt(decrypted_input,c);
+    mpz_to_hex_array(pkcs_decrypted_input,decrypted_input);
+
+    for(int i = 0; i < strlen(pkcs_decrypted_input); i++) {
+        if (pkcs_padded_input[i] != pkcs_decrypted_input[i]) {
+            printf("failed RSA encryption and decryption\n");
+        }
+    }
+}
+
+void oracle_tests() {
+    setup();
+    mpz_t decrypted_input;
+    mpz_init(decrypted_input);
+    
+    char pkcs_padded_input[300];
+    char pkcs_decrypted_input[300];
+    char message[] = "testMessage";
+
+    inputToPaddedMessage(pkcs_padded_input, message);
+    mpz_set_str(m, pkcs_padded_input, 16);
+
+    if (!oracle(m)) {
+        printf("oracle should be correct for original input");
+    }
+
+    encrypt();
+    for(int i = 0; i < 5; i++){    
+        findNextS();
+
+        mpz_t validInput;
+        mpz_init(validInput);
+
+        mpz_powm(validInput,s,e,n);
+        mpz_mul(validInput,validInput,c);
+        mpz_mod(validInput,validInput,n);
+
+        if (!oracle(validInput)) {
+            printf("oracle should be correct for valid input");
+        }
+
+        mpz_mul(validInput,validInput,validInput);
+        mpz_mod(validInput,validInput,n);
+        if (oracle(validInput)) {
+            printf("oracle should not be correct for invalid input");
+        }
+    }
+}
+
+
+int main() {
+    // rsa_tests();
+    oracle_tests();
+    
+    mpz_clear(d);
+    mpz_clear(n);
+    mpz_clear(e);
+    mpz_clear(B);
+    mpz_clear(B2);
+    mpz_clear(B3);
+    mpz_clear(s);
+    mpz_clear(m);
+    mpz_clear(c);
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(r);
+    mpz_clear(r1);
+    mpz_clear(r2);
+    mpz_clear(c_prime);
+    mpz_clear(oracle_decrypted_input);
     
     return 0;   
 }
