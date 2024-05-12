@@ -17,6 +17,26 @@ void print(char *string) {
 }
 
 /**
+ * Reads in a string of user input and returns it in hex format with
+ * valid pkcs padding in front. Currently the padding is just 1s instead
+ * of random numbers.
+*/
+int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
+    sprintf(&pkcs_padded_input[0],"%02x", 0);
+    sprintf(&pkcs_padded_input[2],"%02x", 2);
+
+    int i;
+    for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input) - 1; i++) {
+        sprintf(&pkcs_padded_input[i * 2], "%02x", 1); // add randomness here
+    }
+    sprintf(&pkcs_padded_input[i++ * 2], "%02x", 0);
+
+    for (int t = 0;t < strlen(user_input); i++, t++) {
+        sprintf(&pkcs_padded_input[i * 2], "%02x", (unsigned char)user_input[t]);
+    }
+    return 0;
+}
+/**
  * Reads a line from standard input, pads the input using PKCS#1 v1.5 padding scheme, 
  * and converts the padded input to an mpz_t integer.
  */

@@ -8,6 +8,21 @@ void print(char *string) {
     printf("%s\n",string);
 }
 
+int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
+    sprintf(&pkcs_padded_input[0],"%02x", 0);
+    sprintf(&pkcs_padded_input[2],"%02x", 2);
+
+    int i;
+    for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input) - 1; i++) {
+        sprintf(&pkcs_padded_input[i * 2], "%02x", 1); // add randomness here
+    }
+    sprintf(&pkcs_padded_input[i++ * 2], "%02x", 0);
+
+    for (int t = 0;t < strlen(user_input); i++, t++) {
+        sprintf(&pkcs_padded_input[i * 2], "%02x", (unsigned char)user_input[t]);
+    }
+    return 0;
+}
 
 void interval_tests() {
     // initialize variables
@@ -85,6 +100,9 @@ void interval_tests() {
 void rsa_tests() {
     setup();
     mpz_t decrypted_input;
+    mpz_t c, m;
+    mpz_init(c);
+    mpz_init(m);
     mpz_init(decrypted_input);
     
     char pkcs_padded_input[300];
@@ -93,9 +111,9 @@ void rsa_tests() {
 
     inputToPaddedMessage(pkcs_padded_input, message);
     mpz_set_str(m, pkcs_padded_input, 16);
-    encrypt(c,m,rsa);
-    decrypt(decrypted_input,c,rsa);
-    mpz_to_hex_array(pkcs_decrypted_input,decrypted_input);
+    encrypt(&c,&m,&rsa);
+    decrypt(&decrypted_input,&c,&rsa);
+    mpz_to_hex_array(pkcs_decrypted_input,&decrypted_input);
 
     for(int i = 0; i < strlen(pkcs_decrypted_input); i++) {
         if (pkcs_padded_input[i] != pkcs_decrypted_input[i]) {
@@ -106,6 +124,9 @@ void rsa_tests() {
 
 void oracle_tests() {
     setup();
+    mpz_t c, m;
+    mpz_init(c);
+    mpz_init(m);
     mpz_t decrypted_input;
     mpz_init(decrypted_input);
     
@@ -116,13 +137,13 @@ void oracle_tests() {
     inputToPaddedMessage(pkcs_padded_input, message);
     mpz_set_str(m, pkcs_padded_input, 16);
 
-    if (!oracle(m)) {
+    if (!oracle(&m)) {
         printf("oracle should be correct for original input");
     }
 
-    encrypt(c,m,rsa);
+    encrypt(&c,&m,&rsa);
     for(int i = 0; i < 5; i++){    
-        findNextS();
+        findNextS(&c);
 
         mpz_t validInput;
         mpz_init(validInput);
@@ -131,13 +152,13 @@ void oracle_tests() {
         mpz_mul(validInput,validInput,c);
         mpz_mod(validInput,validInput,rsa.N);
 
-        if (!oracle(validInput)) {
+        if (!oracle(&validInput)) {
             printf("oracle should be correct for valid input");
         }
 
         mpz_mul(validInput,validInput,validInput);
         mpz_mod(validInput,validInput,rsa.N);
-        if (oracle(validInput)) {
+        if (oracle(&validInput)) {
             printf("oracle should not be correct for invalid input");
         }
     }
@@ -152,16 +173,6 @@ int main() {
     mpz_clear(B);
     mpz_clear(B2);
     mpz_clear(B3);
-    mpz_clear(s);
-    mpz_clear(m);
-    mpz_clear(c);
-    mpz_clear(a);
-    mpz_clear(b);
-    mpz_clear(r);
-    mpz_clear(r1);
-    mpz_clear(r2);
-    mpz_clear(c_prime);
-    mpz_clear(oracle_decrypted_input);
-    
+    mpz_clear(s);    
     return 0;   
 }

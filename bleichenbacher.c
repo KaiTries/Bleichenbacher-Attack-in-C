@@ -3,7 +3,6 @@
 
 int TOTAL_REQUESTS = 0;
 
-char oracleString[RSA_BLOCK_BYTE_SIZE * 2];
 
 mpz_t B, B2, B3, s;
 RSA rsa;
@@ -25,45 +24,6 @@ void setup() {
     mpz_init_set_ui(s,1);
     mpz_cdiv_q(s, rsa.N, B3);
     gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
-}
-
-int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
-    sprintf(&pkcs_padded_input[0],"%02x", 0);
-    sprintf(&pkcs_padded_input[2],"%02x", 2);
-
-    int i;
-    for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input) - 1; i++) {
-        sprintf(&pkcs_padded_input[i * 2], "%02x", 1);
-    }
-    sprintf(&pkcs_padded_input[i++ * 2], "%02x", 0);
-
-    for (int t = 0;t < strlen(user_input); i++, t++) {
-        sprintf(&pkcs_padded_input[i * 2], "%02x", (unsigned char)user_input[t]);
-    }
-    return 0;
-}
-
-
-void mpz_to_hex_array(char* hex_string, mpz_t *number) {
-    mpz_get_str(hex_string, 16, *number);
-    int len = strlen(hex_string);
-    if (len < RSA_BLOCK_BYTE_SIZE * 2) {
-        int dif = RSA_BLOCK_BYTE_SIZE * 2 - len;
-        for (int i = len; i >= 0; i--){
-            hex_string[i+dif] = hex_string[i];
-        }
-        for (int i = 0; i < dif;  i++) {
-            hex_string[i] = '0';
-        }
-    }
-}
-
-
-int oracle(mpz_t *number) {
-    mpz_to_hex_array(oracleString, number);
-    if(oracleString[0] != '0' || oracleString[1] != '0') return 0;
-    if(oracleString[2] != '0' || oracleString[3] != '2') return 0;
-    return 1;
 }
 
 void findNextS(mpz_t *c) {

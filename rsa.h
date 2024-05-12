@@ -21,3 +21,9 @@ void decrypt(mpz_t *output, mpz_t *input, RSA *rsa);
 
 // creates an RSA key
 void generate(RSA *rsa);
+
+// turns an mpz integer into its hex string representations
+void mpz_to_hex_array(char *hex_string, mpz_t *number);
+
+// returns 1 if the given number is PKCS conforming
+int oracle(mpz_t *number);

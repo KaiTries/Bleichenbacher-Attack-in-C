@@ -8,7 +8,7 @@ brew install gmp
 
 To build the script simply run:
 ```bash
-cc main.c interval.c bleichenbacher_base.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
+cc main.c interval.c bleichenbacher_base.c rsa.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
 ```
 You might have to adjust the paths to the include and library folders.
 My VSC settings are as follows:
@@ -40,3 +40,19 @@ After building you can execute the script with:
 ```bash
 ./a.out
 ```
+
+
+## rsa.h
+Defines a simple RSA struct that holds the public key E, private key D and modules N. 
+Also defines the encryption and decryption methods.
+The Oracle and the supporting mpz to hex array function are also defined in this file. 
+
+## interal.h
+Defines an interval and a set of intervals. The intervals are inclusive of both endpoints.
+The set is ordered and performs unions upon adding of new intervals.
+
+## bleichenbacher.h
+Defines the steps of the attack itself.
+
+## main.h
+Performs a bleichenbacher attack with the given user input. 
