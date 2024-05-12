@@ -92,10 +92,15 @@ int main() {
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-                gmp_printf("Original paddeddd: %Zd\n", m);
-                gmp_printf("Decrypted message: %Zd\n", set.intervals[0].lower);
-                printf("Decrypted message without padding: ");
-                break;
+                if (mpz_cmp(m, set.intervals[0].lower) == 0) {
+                        gmp_printf("Decrypted message: %Zd\n", set.intervals[0].lower);
+                        printf("Decrypted message without padding: ");
+                        break;
+                }
+                else {
+                    printf("remaining interval is not the same as original message");
+                    break;
+                }
             }
             printf("\n\n----------- Step 2c. -----------\n\n");
             searchingWithOneIntervalLeft(&set, &c);
