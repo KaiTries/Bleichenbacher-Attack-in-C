@@ -102,11 +102,11 @@ int main() {
                     break;
                 }
             }
-            printf("\n\n----------- Step 2c. -----------\n\n");
+            if (j % 100 == 0) printf("\n\n----------- Step 2c. -----------\n\n");
             searchingWithOneIntervalLeft(&set, &c);
             times2c++;
         }
-        printf("\n\n----------- Step 3. -----------\n\n");
+        if (j % 100 == 0) printf("\n\n----------- Step 3. -----------\n\n");
         findNewIntervals(&set);
 
         if (set.size == 0) {
