@@ -44,8 +44,8 @@ int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
 }
 
 
-void mpz_to_hex_array(char* hex_string, mpz_t number) {
-    mpz_get_str(hex_string, 16, number);
+void mpz_to_hex_array(char* hex_string, mpz_t *number) {
+    mpz_get_str(hex_string, 16, *number);
     int len = strlen(hex_string);
     if (len < RSA_BLOCK_BYTE_SIZE * 2) {
         int dif = RSA_BLOCK_BYTE_SIZE * 2 - len;
@@ -59,27 +59,27 @@ void mpz_to_hex_array(char* hex_string, mpz_t number) {
 }
 
 
-int oracle(mpz_t number) {
+int oracle(mpz_t *number) {
     mpz_to_hex_array(oracleString, number);
     if(oracleString[0] != '0' || oracleString[1] != '0') return 0;
     if(oracleString[2] != '0' || oracleString[3] != '2') return 0;
     return 1;
 }
 
-void findNextS(mpz_t c) {
+void findNextS(mpz_t *c) {
     static mpz_t c_prime;
 
     mpz_add_ui(s,s,1);
 
     mpz_powm(c_prime, s, rsa.E, rsa.N);
-    mpz_mul(c_prime, c_prime, c);
+    mpz_mul(c_prime, c_prime, *c);
     mpz_mod(c_prime, c_prime, rsa.N);
 
-    if(oracle(c_prime)) return;
+    if(oracle(&c_prime)) return;
     findNextS(c);
 }
 
-void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t c) {
+void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
     static mpz_t a;
     static mpz_t b;
     static mpz_t r;
@@ -112,9 +112,9 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t c) {
 
         for(mpz_set(s, r1); mpz_cmp(s,r2) <= 0; mpz_add_ui(s,s,1)) {
             mpz_powm(c_prime, s, rsa.E, rsa.N);
-            mpz_mul(c_prime, c_prime, c);
+            mpz_mul(c_prime, c_prime, *c);
             mpz_mod(c_prime, c_prime, rsa.N);
-            if(oracle(c_prime)) {
+            if(oracle(&c_prime)) {
                 return;
             }
             TOTAL_REQUESTS++;

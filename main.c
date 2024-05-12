@@ -37,7 +37,7 @@ int main() {
     print("===============================================================");
 
     encrypt(&c, &m, &rsa);
-    mpz_to_hex_array(encrypted_input, c);
+    mpz_to_hex_array(encrypted_input, &c);
 
     print("this is the original input encrypted with RSA displayed as hex");
     print(encrypted_input);
@@ -63,13 +63,12 @@ int main() {
     start_time = clock();
     start_time_2 = clock();
     printf("\n\n----------- Step 2a. -----------\n\n");
-    findNextS(c);
+    findNextS(&c);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
             printf("\n\n----------- Step 2b. -----------\n\n");
-            mpz_add_ui(s, s, 1);
-            findNextS(c);
+            findNextS(&c);
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
@@ -78,7 +77,7 @@ int main() {
                 break;
             }
             printf("\n\n----------- Step 2c. -----------\n\n");
-            searchingWithOneIntervalLeft(&set, c);
+            searchingWithOneIntervalLeft(&set, &c);
             times2c++;
         }
         printf("\n\n----------- Step 3. -----------\n\n");
