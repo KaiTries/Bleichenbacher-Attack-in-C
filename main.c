@@ -92,6 +92,7 @@ int main() {
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+                gmp_printf("Original paddeddd: %Zd\n", m);
                 gmp_printf("Decrypted message: %Zd\n", set.intervals[0].lower);
                 printf("Decrypted message without padding: ");
                 break;
@@ -115,6 +116,7 @@ int main() {
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
     printf("Amount of iterations: %d\n", j);
+    printf("Number of oracle calls: %d\n", oracleCalls);
     printf("Times step 2b called: %d\n", times2b);
     printf("Times step 2c called: %d\n", times2c);
     printf("Execution time: %f seconds\n", cpu_time_used);

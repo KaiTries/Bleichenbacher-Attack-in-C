@@ -7,6 +7,8 @@
 #define RSA_PUBLIC_KEY_SIZE 1024
 #define RSA_PUBLIC_EXPONENT 65537
 
+extern int oracleCalls;
+
 typedef struct RSA {
     mpz_t E;
     mpz_t D;
@@ -26,4 +28,4 @@ void generate(RSA *rsa);
 void mpz_to_hex_array(char *hex_string, mpz_t *number);
 
 // returns 1 if the given number is PKCS conforming
-int oracle(mpz_t *number);
+int oracle(mpz_t *number, RSA *rsa);

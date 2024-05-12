@@ -5,6 +5,8 @@ char P[] = "13085544939016433034116036005625821953227372297195833776806214472190
 char Q[] = "10515460639626849709984902074446790599067546798868400707778516190055079520038452945216601553837352784786191461977224566643334966876410080204134569391652071";
 char oracleString[RSA_BLOCK_BYTE_SIZE * 2];
 
+int oracleCalls = 0;
+
 void encrypt(mpz_t *output, mpz_t *input, RSA *rsa) {
     mpz_powm(*output,*input,rsa->E,rsa->N);
 
@@ -91,8 +93,12 @@ void mpz_to_hex_array(char* hex_string, mpz_t *number) {
     }
 }
 
-int oracle(mpz_t *number) {
-    mpz_to_hex_array(oracleString, number);
+int oracle(mpz_t *number, RSA *rsa) {
+    mpz_t decrypted_input;
+    mpz_init(decrypted_input);
+    decrypt(&decrypted_input,number,rsa);
+    mpz_to_hex_array(oracleString, &decrypted_input);
+    oracleCalls++;
     if(oracleString[0] != '0' || oracleString[1] != '0') return 0;
     if(oracleString[2] != '0' || oracleString[3] != '2') return 0;
     return 1;

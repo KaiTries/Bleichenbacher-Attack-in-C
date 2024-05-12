@@ -27,28 +27,31 @@ void setup() {
 }
 
 void findNextS(mpz_t *c) {
-    static mpz_t c_prime;
-
+    mpz_t c_prime;
+    mpz_init(c_prime);
+    
     mpz_add_ui(s,s,1);
 
-    mpz_powm(c_prime, s, rsa.E, rsa.N);
-    mpz_mul(c_prime, c_prime, *c);
-    mpz_mod(c_prime, c_prime, rsa.N);
-
-    if(oracle(&c_prime)) return;
-    findNextS(c);
+    while(1) {
+        mpz_powm(c_prime, s, rsa.E, rsa.N);
+        mpz_mul(c_prime, c_prime, *c);
+        mpz_mod(c_prime, c_prime, rsa.N);
+        if (oracle(&c_prime, &rsa)) {
+            return;
+        }
+        mpz_add_ui(s,s,1);
+    }
+    mpz_clear(c_prime);
 }
 
 void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
-    static mpz_t a;
-    static mpz_t b;
-    static mpz_t r;
-    static mpz_t r1;
-    static mpz_t r2;
-    static mpz_t c_prime;
+    mpz_t a, b, r, r1, r2, c_prime;
+    mpz_init(r1); mpz_init(r2);
+    mpz_init(r); mpz_init(c_prime);
+    
 
-    mpz_set(a, set->intervals[0].lower);
-    mpz_set(b, set->intervals[0].upper);
+    mpz_init_set(a, set->intervals[0].lower);
+    mpz_init_set(b, set->intervals[0].upper);
 
     mpz_mul(r, b, s);
     mpz_sub(r, r, B2);
@@ -74,28 +77,33 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
             mpz_powm(c_prime, s, rsa.E, rsa.N);
             mpz_mul(c_prime, c_prime, *c);
             mpz_mod(c_prime, c_prime, rsa.N);
-            if(oracle(&c_prime)) {
+            if(oracle(&c_prime, &rsa)) {
                 return;
             }
             TOTAL_REQUESTS++;
         }
         mpz_add_ui(r,r,1);
-    }
+    }    
+    
+    // free gmp structs
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(r);
+    mpz_clear(r1);
+    mpz_clear(r2);
+    mpz_clear(c_prime);
 }
 
 void findNewIntervals(IntervalSet *priorSet) {
-    static mpz_t a;
-    static mpz_t b;
-    static mpz_t r;
-    static mpz_t r1;
-    static mpz_t r2;
-    static mpz_t aa;
-    static mpz_t bb;
+    mpz_t a, b, r, r1, r2, aa, bb;
+    mpz_init(a); mpz_init(b);
+    mpz_init(r); mpz_init(r1);
+    mpz_init(r2); mpz_init(aa);
+    mpz_init(bb); 
     
     Interval interval;
     IntervalSet set;
     init_interval_set(&set);
-    int i = 0;
 
     // loop through all intervals in priorSet
     for (size_t j = 0; j < priorSet->size; j++) {
@@ -144,6 +152,16 @@ void findNewIntervals(IntervalSet *priorSet) {
     }
     free_interval_set(priorSet);
     *priorSet = set;
+
+
+    // free gmp structs
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(r);
+    mpz_clear(r1);
+    mpz_clear(r2);
+    mpz_clear(aa);
+    mpz_clear(bb);
 }
 
 
