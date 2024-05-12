@@ -137,7 +137,7 @@ void oracle_tests() {
     inputToPaddedMessage(pkcs_padded_input, message);
     mpz_set_str(m, pkcs_padded_input, 16);
 
-    if (!oracle(&m)) {
+    if (!oracle(&m, &rsa)) {
         printf("oracle should be correct for original input");
     }
 
@@ -152,13 +152,13 @@ void oracle_tests() {
         mpz_mul(validInput,validInput,c);
         mpz_mod(validInput,validInput,rsa.N);
 
-        if (!oracle(&validInput)) {
+        if (!oracle(&validInput, &rsa)) {
             printf("oracle should be correct for valid input");
         }
 
         mpz_mul(validInput,validInput,validInput);
         mpz_mod(validInput,validInput,rsa.N);
-        if (oracle(&validInput)) {
+        if (oracle(&validInput, &rsa)) {
             printf("oracle should not be correct for invalid input");
         }
     }
