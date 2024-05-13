@@ -10,6 +10,9 @@ extern RSA rsa;
 // sets up environment for the attack
 void setup();
 
+// trimming
+void trimming();
+
 // iteratively searches for the next bigger s that results in a valid PKCS message
 void findNextS_iterative(mpz_t *c, mpz_t *s);
 

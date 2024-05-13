@@ -1,5 +1,7 @@
 #include "bleichenbacher.h"
 
+#define TRIMMER_LIMIT 500
+
 mpz_t B, B2, B3;
 RSA rsa;
 
@@ -17,6 +19,56 @@ void setup() {
         printf("Something wrong with the B values");
     }  
 }
+
+/*
+https://stackoverflow.com/questions/19738919/gcd-function-for-c
+*/
+int gcd(int a, int b)
+{
+    int temp;
+    while (b != 0)
+    {
+        temp = a % b;
+
+        a = b;
+        b = temp;
+    }
+    return a;
+}
+
+int test1(int u, int t) {
+    if (gcd(u,t) == 1) return 1;
+    return 0;
+}
+
+int test2(int u_int, int t_int,mpz_t *c, RSA *rsa) {
+    mpz_t u, t, t_inv, a, b, c_prime;
+    mpz_set_ui(u, u_int);
+    mpz_set_ui(t, t_int);
+
+    mpz_invert(t_inv, t, rsa->N);
+    mpz_powm(a, u, rsa->E, rsa->N);
+    mpz_powm(b, t_inv, rsa->E, rsa->N);
+
+    mpz_mul(c_prime, a, b);
+    mpz_mul(c_prime, c_prime, *c);
+    mpz_mod(c_prime, c_prime, rsa->N);
+    if (oracle(c_prime, rsa)) return 1;
+    return 0;
+}
+
+int lcm(int *a, int length) {
+    int lcm = a[0];
+    for(int i = 1; i < length; i++) {
+        lcm = (lcm * a[i]) / gcd(lcm, a[i]);
+    }
+    return lcm;
+}
+
+void trimming() {
+
+}
+
 
 void findNextS_iterative(mpz_t *c, mpz_t *s) {
     mpz_t c_prime;
