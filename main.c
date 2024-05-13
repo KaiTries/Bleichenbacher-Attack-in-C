@@ -18,33 +18,12 @@ void print(char *string) {
 }
 
 /**
- * Reads in a string of user input and returns it in hex format with
- * valid pkcs padding in front. Currently the padding is just 1s instead
- * of random numbers.
-*/
-int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
-    sprintf(&pkcs_padded_input[0],"%02x", 0);
-    sprintf(&pkcs_padded_input[2],"%02x", 2);
-
-    srand(1); 
-    int i;
-    for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input) - 1; i++) {
-        sprintf(&pkcs_padded_input[i * 2], "%02x", rand() % 256);
-    }
-    sprintf(&pkcs_padded_input[i++ * 2], "%02x", 0);
-
-    for (int t = 0;t < strlen(user_input); i++, t++) {
-        sprintf(&pkcs_padded_input[i * 2], "%02x", (unsigned char)user_input[t]);
-    }
-    return 0;
-}
-/**
  * Reads a line from standard input, pads the input using PKCS#1 v1.5 padding scheme, 
  * and converts the padded input to an mpz_t integer.
  */
 void get_user_input(mpz_t *m){
     fgets(user_input, sizeof(user_input), stdin);
-    inputToPaddedMessage(pkcs_padded_input, user_input);
+    prepareInput(pkcs_padded_input, user_input);
     mpz_set_str(*m, pkcs_padded_input, 16);
 }
 
@@ -87,19 +66,12 @@ int main() {
     int times2b = 0;
     int times2c = 0;
 
-    mpz_add(s, rsa.N, B2);
-    mpz_cdiv_q(s, s, b);
-    gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
-
-
-
-
     int j = 0;
     printf("\n\n----------- Starting the Attack -----------\n\n");
     start_time = clock();
     start_time_2 = clock();
     printf("\n\n----------- Step 2a. -----------\n\n");
-    findNextS_iterative(&c, &s);
+    findNextS_2a(&c, &s, &a, &b);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {

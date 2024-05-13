@@ -3,9 +3,27 @@
 
 char P[] = "13085544939016433034116036005625821953227372297195833776806214472190928979740509797654163083677193114899060771182653327749002407615798680323156649288891299";
 char Q[] = "10515460639626849709984902074446790599067546798868400707778516190055079520038452945216601553837352784786191461977224566643334966876410080204134569391652071";
+
 char oracleString[RSA_BLOCK_BYTE_SIZE * 2];
 
 int oracleCalls = 0;
+
+int prepareInput(char *output, char *input) {
+    sprintf(&output[0],"%02x", 0);
+    sprintf(&output[2],"%02x", 2);
+
+    srand(1); 
+    int i;
+    for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(input) - 1; i++) {
+        sprintf(&output[i * 2], "%02x", rand() % 256);
+    }
+    sprintf(&output[i++ * 2], "%02x", 0);
+
+    for (int t = 0;t < strlen(input); i++, t++) {
+        sprintf(&output[i * 2], "%02x", (unsigned char)input[t]);
+    }
+    return 0;
+}
 
 void encrypt(mpz_t *output, mpz_t *input, RSA *rsa) {
     mpz_powm(*output,*input,rsa->E,rsa->N);

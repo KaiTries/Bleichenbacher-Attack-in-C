@@ -14,7 +14,7 @@ void setup();
 void trimming(mpz_t *t, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa);
 
 // iteratively searches for the next bigger s that results in a valid PKCS message
-void findNextS_iterative(mpz_t *c, mpz_t *s);
+void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b);
 
 // searches the last Interval with given algorithm
 int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s);

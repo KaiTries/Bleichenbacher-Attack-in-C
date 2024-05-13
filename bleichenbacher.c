@@ -162,21 +162,45 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
 }
 
 
-void findNextS_iterative(mpz_t *c, mpz_t *s) {
-    mpz_t c_prime;
+void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
+    mpz_t r, c_prime, comparison;
+    mpz_init(r);
     mpz_init(c_prime);
-    
-    mpz_add_ui(*s,*s,1);
+    mpz_init(comparison);
 
+    mpz_add(*s, rsa.N, B2);
+    mpz_cdiv_q(*s, *s, *b);
+
+    int found = 0;
     while(1) {
-        mpz_powm(c_prime, *s, rsa.E, rsa.N);
-        mpz_mul(c_prime, c_prime, *c);
-        mpz_mod(c_prime, c_prime, rsa.N);
-        if (oracle(&c_prime, &rsa)) {
-            return;
+        // r = ((s * a) - 3B) / n
+        mpz_mul(r, *s, *a);
+        mpz_sub(r, r, B3);
+        mpz_fdiv_q(r, r, rsa.N);
+
+        // compare = (2B + (r + 1) * n) / b
+        mpz_add_ui(comparison, r, 1);
+        mpz_mul(comparison, comparison, rsa.N);
+        mpz_add(comparison, comparison, B2);
+        mpz_cdiv_q(comparison, comparison, *b);
+
+        if (mpz_cmp(*s,comparison) >= 0) {
+            mpz_powm(c_prime, *s, rsa.E, rsa.N);
+            mpz_mul(c_prime, c_prime, *c);
+            mpz_mod(c_prime, c_prime, rsa.N);
+            if (oracle(&c_prime, &rsa)) {
+                mpz_clear(r);
+                mpz_clear(comparison);
+                mpz_clear(c_prime);
+                return;
+            }
+            mpz_add_ui(*s,*s,1);
+        } else {
+            mpz_set(*s, comparison);
         }
-        mpz_add_ui(*s,*s,1);
     }
+    mpz_clear(r);
+    mpz_clear(comparison);
     mpz_clear(c_prime);
 }
 
@@ -186,6 +210,7 @@ void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
         if(result) break;
     }
 }
+
 
 
 int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
