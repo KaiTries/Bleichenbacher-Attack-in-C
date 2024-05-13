@@ -211,8 +211,6 @@ void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
     }
 }
 
-
-
 int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
     mpz_t a, b, r, r1, r2, c_prime;
     mpz_init(r1); mpz_init(r2);
@@ -225,7 +223,7 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
     mpz_mul(r, b, *s);
     mpz_sub(r, r, B2);
     mpz_mul_ui(r,r,2);
-    mpz_fdiv_q(r, r, rsa.N);
+    mpz_cdiv_q(r, r, rsa.N);
 
     while(1) {
         // left bound
