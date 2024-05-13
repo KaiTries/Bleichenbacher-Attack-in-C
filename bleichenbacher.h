@@ -11,7 +11,7 @@ extern RSA rsa;
 void setup();
 
 // trimming
-void trimming();
+void trimming(mpz_t *c, RSA *rsa);
 
 // iteratively searches for the next bigger s that results in a valid PKCS message
 void findNextS_iterative(mpz_t *c, mpz_t *s);

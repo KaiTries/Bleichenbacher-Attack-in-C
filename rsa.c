@@ -99,6 +99,7 @@ int oracle(mpz_t *number, RSA *rsa) {
     decrypt(&decrypted_input,number,rsa);
     mpz_to_hex_array(oracleString, &decrypted_input);
     oracleCalls++;
+    mpz_clear(decrypted_input);
     if(oracleString[0] != '0' || oracleString[1] != '0') return 0;
     if(oracleString[2] != '0' || oracleString[3] != '2') return 0;
     return 1;

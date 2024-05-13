@@ -58,7 +58,7 @@ int main() {
     print("===============================================================");
 
     encrypt(&c, &m, &rsa);
-    
+    trimming(&c, &rsa);
     mpz_cdiv_q(s, rsa.N, B3);
     gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
 

@@ -43,6 +43,13 @@ int test1(int u, int t) {
 
 int test2(int u_int, int t_int,mpz_t *c, RSA *rsa) {
     mpz_t u, t, t_inv, a, b, c_prime;
+    mpz_init(u);
+    mpz_init(t);
+    mpz_init(t_inv);
+    mpz_init(a);
+    mpz_init(b);
+    mpz_init(c_prime);
+
     mpz_set_ui(u, u_int);
     mpz_set_ui(t, t_int);
 
@@ -53,7 +60,21 @@ int test2(int u_int, int t_int,mpz_t *c, RSA *rsa) {
     mpz_mul(c_prime, a, b);
     mpz_mul(c_prime, c_prime, *c);
     mpz_mod(c_prime, c_prime, rsa->N);
-    if (oracle(c_prime, rsa)) return 1;
+    if (oracle(&c_prime, rsa)) {
+        mpz_clear(u);
+        mpz_clear(t);
+        mpz_clear(t_inv);
+        mpz_clear(a);
+        mpz_clear(b);
+        mpz_clear(c_prime);
+        return 1;
+    }
+    mpz_clear(u);
+    mpz_clear(t);
+    mpz_clear(t_inv);
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(c_prime);
     return 0;
 }
 
@@ -65,7 +86,42 @@ int lcm(int *a, int length) {
     return lcm;
 }
 
-void trimming() {
+int in_range(int u, int t) {
+    double lower_bound = 2 / 3.0;
+    double upper_bound = 3 / 2.0;
+    double num = u / (double) t;
+    if (lower_bound < num < upper_bound) return 1;
+    return 0;
+}
+
+void trimming(mpz_t *c, RSA *rsa) {
+    int counter = 0;
+    int us[500];
+    int ts[500];
+    int idx = 0;
+    
+    int t, u;
+
+    for (t = 3; t < 4097; t++) {
+        if (counter >= TRIMMER_LIMIT) break;
+        for (u = t-1; u < t+2; u++) {
+            if (counter >= TRIMMER_LIMIT || !in_range(u, t)) break;
+            if (test1(u, t) == 1) {
+                counter++;
+                if (test2(u, t, c, rsa) == 1) {
+                    us[idx] = u;
+                    ts[idx++] = t;
+                    break;
+                }
+            }
+            
+        }
+    }
+    
+    printf("Conducted %d trimmings and found %d candidates.\n", counter, idx);
+
+    int denom = lcm(ts,idx);
+    printf("lcm of ts: %d\n",denom);
 
 }
 
