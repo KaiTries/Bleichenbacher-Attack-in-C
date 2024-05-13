@@ -432,6 +432,7 @@ void baseAttack(mpz_t *c) {
 
 void trimmersOnly(mpz_t *c) {
     // ListOfIntervals = [(2B, 3B - 1)]
+    oracleCalls = 0;
     mpz_t s, a, b, t, ul, uh;
     mpz_init(t);
     mpz_init(ul);
@@ -511,6 +512,8 @@ void trimmersOnly(mpz_t *c) {
 }
 
 void optimizedWithoutTrimmers(mpz_t *c) {
+    oracleCalls = 0;
+
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t s, a, b;
     mpz_init_set(a,B2);
@@ -576,6 +579,7 @@ void optimizedWithoutTrimmers(mpz_t *c) {
 }
 
 void fullyOptimizedAttack(mpz_t *c) {
+    oracleCalls = 0;
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t s, a, b, t, ul, uh;
     mpz_init(t);
