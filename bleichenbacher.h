@@ -16,6 +16,7 @@ void findNextS_iterative(mpz_t *c, mpz_t *s);
 // searches the last Interval with given algorithm
 int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s);
 
+// searches through each interval with the same strategy as if only one interval left
 void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s);
 
 // Finds new possible intervals
