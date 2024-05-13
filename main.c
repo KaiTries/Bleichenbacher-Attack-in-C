@@ -12,6 +12,7 @@ char encrypted_input[RSA_BLOCK_BYTE_SIZE * 2];
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
 
 
+
 void print(char *string) {
     printf("%s\n",string);
 }
@@ -25,9 +26,10 @@ int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
     sprintf(&pkcs_padded_input[0],"%02x", 0);
     sprintf(&pkcs_padded_input[2],"%02x", 2);
 
+    srand(1); 
     int i;
     for (i = 2; i < RSA_BLOCK_BYTE_SIZE - strlen(user_input) - 1; i++) {
-        sprintf(&pkcs_padded_input[i * 2], "%02x", 1); // add randomness here
+        sprintf(&pkcs_padded_input[i * 2], "%02x", rand() % 256);
     }
     sprintf(&pkcs_padded_input[i++ * 2], "%02x", 0);
 

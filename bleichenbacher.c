@@ -118,7 +118,14 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     }
     printf("Conducted %d trimmings and found %d candidates.\n", counter, idx);
 
-    int denom = (idx > 0) ? lcm(ts,idx) : 1;
+    if (idx == 0) {
+        mpz_set_ui(*t_prime, 1);
+        mpz_set_ui(*ul, 1);
+        mpz_set_ui(*uh, 1);
+        return;
+    }
+
+    int denom = lcm(ts,idx);
     printf("lcm of ts: %d\n",denom);
 
     // 2t / 3 < u < 3t / 2
