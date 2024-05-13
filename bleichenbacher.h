@@ -11,10 +11,12 @@ extern RSA rsa;
 void setup();
 
 // iteratively searches for the next bigger s that results in a valid PKCS message
-void findNextS(mpz_t *c, mpz_t *s);
+void findNextS_iterative(mpz_t *c, mpz_t *s);
 
 // searches the last Interval with given algorithm
-void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c, mpz_t *s);
+int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s);
+
+void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s);
 
 // Finds new possible intervals
 void findNewIntervals(IntervalSet *priorSet, mpz_t *s);

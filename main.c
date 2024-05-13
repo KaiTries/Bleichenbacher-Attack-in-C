@@ -82,12 +82,12 @@ int main() {
     start_time = clock();
     start_time_2 = clock();
     printf("\n\n----------- Step 2a. -----------\n\n");
-    findNextS(&c, &s);
+    findNextS_iterative(&c, &s);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
             printf("\n\n----------- Step 2b. -----------\n\n");
-            findNextS(&c, &s);
+            findNextS_multipleIntervals(&set, &c, &s);
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
@@ -104,7 +104,7 @@ int main() {
                 }
             }
             if (j % 100 == 0) printf("\n\n----------- Step 2c. -----------\n\n");
-            searchingWithOneIntervalLeft(&set, &c, &s);
+            searchingWithOneIntervalLeft(&set.intervals[0], &c, &s);
             times2c++;
         }
         if (j % 100 == 0) printf("\n\n----------- Step 3. -----------\n\n");

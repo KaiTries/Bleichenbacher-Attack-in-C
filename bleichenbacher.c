@@ -18,7 +18,7 @@ void setup() {
     }  
 }
 
-void findNextS(mpz_t *c, mpz_t *s) {
+void findNextS_iterative(mpz_t *c, mpz_t *s) {
     mpz_t c_prime;
     mpz_init(c_prime);
     
@@ -36,14 +36,22 @@ void findNextS(mpz_t *c, mpz_t *s) {
     mpz_clear(c_prime);
 }
 
-void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c, mpz_t *s) {
+void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
+    for (size_t j = 0; j < set->size; j++) {
+        int result = searchingWithOneIntervalLeft(&set->intervals[j], c, s);
+        if(result) break;
+    }
+}
+
+
+int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
     mpz_t a, b, r, r1, r2, c_prime;
     mpz_init(r1); mpz_init(r2);
     mpz_init(r); mpz_init(c_prime);
     
 
-    mpz_init_set(a, set->intervals[0].lower);
-    mpz_init_set(b, set->intervals[0].upper);
+    mpz_init_set(a, interval[0].lower);
+    mpz_init_set(b, interval[0].upper);
 
     mpz_mul(r, b, *s);
     mpz_sub(r, r, B2);
@@ -70,7 +78,13 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c, mpz_t *s) {
             mpz_mul(c_prime, c_prime, *c);
             mpz_mod(c_prime, c_prime, rsa.N);
             if(oracle(&c_prime, &rsa)) {
-                return;
+                mpz_clear(a);
+                mpz_clear(b);
+                mpz_clear(r);
+                mpz_clear(r1);
+                mpz_clear(r2);
+                mpz_clear(c_prime);
+                return 1;
             }
         }
         mpz_add_ui(r,r,1);
@@ -83,6 +97,7 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c, mpz_t *s) {
     mpz_clear(r1);
     mpz_clear(r2);
     mpz_clear(c_prime);
+    return 0;
 }
 
 void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {

@@ -144,7 +144,7 @@ void oracle_tests() {
 
     encrypt(&c,&m,&rsa);
     for(int i = 0; i < 5; i++){    
-        findNextS(&c, &s);
+        findNextS_iterative(&c, &s);
 
         mpz_t validInput;
         mpz_init(validInput);
