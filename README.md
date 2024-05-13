@@ -15,23 +15,13 @@ Some ciphertext: c
 First we set the initial interval (2B,3B - 1) and the starting value of s to n / 3B. Where B is $2^{8*k - 2}$. We then increase s until we obtain our first valid integer s that will result in a valid message:
 
 ```c
-void findNextS_iteratively(
-    mpz_t *c, mpz_t *s, 
-    mpz_t *a, mpz_t *b) 
-{
-    mpz_t c_prime;
-    mpz_add_ui(*s,*s,1);
-    mpz_init(c_prime);
-
+void findNextS_iteratively() {
     while(1) {
-        mpz_powm(c_prime, *s, rsa.E, rsa.N);
-        mpz_mul(c_prime, c_prime, *c);
-        mpz_mod(c_prime, c_prime, rsa.N);
-        if (oracle(&c_prime, &rsa)) {
-            mpz_clear(c_prime);
-            return;
+        // compute c_prime
+        if (oracle(c_prime)) {
+            // found new valid s
         }
-        mpz_add_ui(*s,*s,1);
+        // increase s by one
     }
 }
 ```
