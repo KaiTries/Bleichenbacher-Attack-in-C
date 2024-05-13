@@ -71,6 +71,7 @@ int main() {
     start_time = clock();
     start_time_2 = clock();
     findNextS_2a(&c, &s, &a, &b);
+    findNewIntervals(&set, &s);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
