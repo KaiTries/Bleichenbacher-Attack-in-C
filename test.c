@@ -124,9 +124,10 @@ void rsa_tests() {
 
 void oracle_tests() {
     setup();
-    mpz_t c, m;
+    mpz_t c, m, s;
     mpz_init(c);
     mpz_init(m);
+    mpz_init_set_ui(s,1);
     mpz_t decrypted_input;
     mpz_init(decrypted_input);
     
@@ -143,7 +144,7 @@ void oracle_tests() {
 
     encrypt(&c,&m,&rsa);
     for(int i = 0; i < 5; i++){    
-        findNextS(&c);
+        findNextS(&c, &s);
 
         mpz_t validInput;
         mpz_init(validInput);
@@ -173,6 +174,5 @@ int main() {
     mpz_clear(B);
     mpz_clear(B2);
     mpz_clear(B3);
-    mpz_clear(s);    
     return 0;   
 }

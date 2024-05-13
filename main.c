@@ -47,8 +47,9 @@ void get_user_input(mpz_t *m){
 }
 
 int main() {
-    mpz_t m, c;
+    mpz_t m, c, s;
     mpz_init(m); mpz_init(c);
+    mpz_init_set_ui(s,1);
 
     setup();
     get_user_input(&m);
@@ -58,6 +59,9 @@ int main() {
 
     encrypt(&c, &m, &rsa);
     
+    mpz_cdiv_q(s, rsa.N, B3);
+    gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
+
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t a, b;
     mpz_init_set(a,B2);
@@ -78,12 +82,12 @@ int main() {
     start_time = clock();
     start_time_2 = clock();
     printf("\n\n----------- Step 2a. -----------\n\n");
-    findNextS(&c);
+    findNextS(&c, &s);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
             printf("\n\n----------- Step 2b. -----------\n\n");
-            findNextS(&c);
+            findNextS(&c, &s);
             times2b++;
         } else { 
             if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
@@ -100,11 +104,11 @@ int main() {
                 }
             }
             if (j % 100 == 0) printf("\n\n----------- Step 2c. -----------\n\n");
-            searchingWithOneIntervalLeft(&set, &c);
+            searchingWithOneIntervalLeft(&set, &c, &s);
             times2c++;
         }
         if (j % 100 == 0) printf("\n\n----------- Step 3. -----------\n\n");
-        findNewIntervals(&set);
+        findNewIntervals(&set, &s);
 
         if (set.size == 0) {
             printf("No solution found\n");
@@ -128,6 +132,7 @@ int main() {
     mpz_clear(c);
     mpz_clear(a);
     mpz_clear(b);
+    mpz_clear(s);
     return 0;
 }
 

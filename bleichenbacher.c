@@ -1,6 +1,6 @@
 #include "bleichenbacher.h"
 
-mpz_t B, B2, B3, s;
+mpz_t B, B2, B3;
 RSA rsa;
 
 void setup() {
@@ -16,31 +16,27 @@ void setup() {
     || mpz_sizeinbase(B3,2) / 8 != RSA_BLOCK_BYTE_SIZE - 2) {
         printf("Something wrong with the B values");
     }  
-
-    mpz_init_set_ui(s,1);
-    mpz_cdiv_q(s, rsa.N, B3);
-    gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
 }
 
-void findNextS(mpz_t *c) {
+void findNextS(mpz_t *c, mpz_t *s) {
     mpz_t c_prime;
     mpz_init(c_prime);
     
-    mpz_add_ui(s,s,1);
+    mpz_add_ui(*s,*s,1);
 
     while(1) {
-        mpz_powm(c_prime, s, rsa.E, rsa.N);
+        mpz_powm(c_prime, *s, rsa.E, rsa.N);
         mpz_mul(c_prime, c_prime, *c);
         mpz_mod(c_prime, c_prime, rsa.N);
         if (oracle(&c_prime, &rsa)) {
             return;
         }
-        mpz_add_ui(s,s,1);
+        mpz_add_ui(*s,*s,1);
     }
     mpz_clear(c_prime);
 }
 
-void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
+void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c, mpz_t *s) {
     mpz_t a, b, r, r1, r2, c_prime;
     mpz_init(r1); mpz_init(r2);
     mpz_init(r); mpz_init(c_prime);
@@ -49,7 +45,7 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
     mpz_init_set(a, set->intervals[0].lower);
     mpz_init_set(b, set->intervals[0].upper);
 
-    mpz_mul(r, b, s);
+    mpz_mul(r, b, *s);
     mpz_sub(r, r, B2);
     mpz_mul_ui(r,r,2);
     mpz_fdiv_q(r, r, rsa.N);
@@ -69,8 +65,8 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
         mpz_cdiv_q(r2, r2, a);
         mpz_add_ui(r2,r2,1);
 
-        for(mpz_set(s, r1); mpz_cmp(s,r2) <= 0; mpz_add_ui(s,s,1)) {
-            mpz_powm(c_prime, s, rsa.E, rsa.N);
+        for(mpz_set(*s, r1); mpz_cmp(*s,r2) <= 0; mpz_add_ui(*s,*s,1)) {
+            mpz_powm(c_prime, *s, rsa.E, rsa.N);
             mpz_mul(c_prime, c_prime, *c);
             mpz_mod(c_prime, c_prime, rsa.N);
             if(oracle(&c_prime, &rsa)) {
@@ -89,7 +85,7 @@ void searchingWithOneIntervalLeft(IntervalSet *set, mpz_t *c) {
     mpz_clear(c_prime);
 }
 
-void findNewIntervals(IntervalSet *priorSet) {
+void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
     mpz_t a, b, r, r1, r2, aa, bb;
     mpz_init(a); mpz_init(b);
     mpz_init(r); mpz_init(r1);
@@ -107,14 +103,14 @@ void findNewIntervals(IntervalSet *priorSet) {
 
         // r1 = (as - 3B + 1) / n
         // r1 = ceil((a * s - B3 + 1), N)
-        mpz_mul(r1, a, s);
+        mpz_mul(r1, a, *s);
         mpz_sub(r1, r1, B3);
         mpz_add_ui(r1, r1, 1);
         mpz_cdiv_q(r1, r1, rsa.N);
 
         // r2 = (bs - 2B) / n
         // r2 = floor((b * s - B2), N) + 1
-        mpz_mul(r2, b, s);
+        mpz_mul(r2, b, *s);
         mpz_sub(r2, r2, B2);
         mpz_fdiv_q(r2, r2, rsa.N);
         mpz_add_ui(r2 ,r2, 1);
@@ -123,13 +119,13 @@ void findNewIntervals(IntervalSet *priorSet) {
             // aa = ceil(B2 + r*N, s)
             mpz_mul(aa, r, rsa.N);
             mpz_add(aa, aa, B2);
-            mpz_cdiv_q(aa, aa, s);
+            mpz_cdiv_q(aa, aa, *s);
 
             // bb = floor(B3 - 1 + r*N, s)
             mpz_mul(bb, r, rsa.N);
             mpz_add(bb, bb, B3);
             mpz_sub_ui(bb, bb, 1);
-            mpz_fdiv_q(bb, bb, s);
+            mpz_fdiv_q(bb, bb, *s);
 
 
             if (mpz_cmp(aa, a) > 0) {
