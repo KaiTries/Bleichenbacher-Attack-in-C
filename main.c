@@ -70,12 +70,10 @@ int main() {
     printf("\n\n----------- Starting the Attack -----------\n\n");
     start_time = clock();
     start_time_2 = clock();
-    printf("\n\n----------- Step 2a. -----------\n\n");
     findNextS_2a(&c, &s, &a, &b);
     end_time_2 = clock();
     while(1) {
         if(set.size > 1) {
-            printf("\n\n----------- Step 2b. -----------\n\n");
             findNextS_multipleIntervals(&set, &c, &s);
             times2b++;
         } else { 
@@ -92,11 +90,9 @@ int main() {
                     break;
                 }
             }
-            if (j % 100 == 0) printf("\n\n----------- Step 2c. -----------\n\n");
             searchingWithOneIntervalLeft(&set.intervals[0], &c, &s);
             times2c++;
         }
-        if (j % 100 == 0) printf("\n\n----------- Step 3. -----------\n\n");
         findNewIntervals(&set, &s);
 
         if (set.size == 0) {
