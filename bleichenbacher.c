@@ -94,15 +94,15 @@ int in_range(int u, int t) {
     return 0;
 }
 
-void trimming(mpz_t *c, RSA *rsa) {
+void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     int counter = 0;
     int us[500];
     int ts[500];
     int idx = 0;
     
-    int t, u;
+    int t = 1, u;
 
-    for (t = 3; t < 4097; t++) {
+    for (t = 3; t < 10000; t++) {
         if (counter >= TRIMMER_LIMIT) break;
         for (u = t-1; u < t+2; u++) {
             if (counter >= TRIMMER_LIMIT || !in_range(u, t)) break;
@@ -114,15 +114,44 @@ void trimming(mpz_t *c, RSA *rsa) {
                     break;
                 }
             }
-            
         }
     }
-    
     printf("Conducted %d trimmings and found %d candidates.\n", counter, idx);
 
-    int denom = lcm(ts,idx);
+    int denom = (idx > 0) ? lcm(ts,idx) : 1;
     printf("lcm of ts: %d\n",denom);
 
+    // 2t / 3 < u < 3t / 2
+    double min_u = (2 * denom) / 3.0;
+    double max_u = (3 * denom) / 2.0;
+
+    // max bound for u_lower is u_a / t_a
+    double max_u_lower = (us[0] / (double) ts[0]) * denom;
+
+    // min bound for u_upper is u_b / t_b
+    double min_u_upper = (us[idx - 1] / (double) ts[idx - 1]) * denom;
+
+    int u_lower = 1;
+    int u_upper = 1;
+
+    for (int i = min_u + 1; i <= max_u_lower; i++) {
+        if (test2(i, denom, c, rsa) && u_lower == 1) {
+            u_lower = i;
+            break;
+        }
+    }
+
+    for (int i = max_u - 1; i >= min_u_upper ; i--) {
+        if (test2(i, denom, c, rsa) && u_upper == 1) {
+            u_upper = i;
+            break;
+        }
+    }
+    printf("lower u: %d, upper u: %d\n", u_lower, u_upper);
+
+    mpz_set_ui(*t_prime, denom);
+    mpz_set_ui(*ul, u_lower);
+    mpz_set_ui(*uh, u_upper);
 }
 
 

@@ -58,15 +58,23 @@ int main() {
     print("===============================================================");
 
     encrypt(&c, &m, &rsa);
-    trimming(&c, &rsa);
-    mpz_cdiv_q(s, rsa.N, B3);
-    gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
 
     // ListOfIntervals = [(2B, 3B - 1)]
-    mpz_t a, b;
+    mpz_t a, b, t, ul, uh;
+    mpz_init(t);
+    mpz_init(ul);
+    mpz_init(uh);
     mpz_init_set(a,B2);
     mpz_init_set(b,B3);
     mpz_sub_ui(b, b, 1);
+
+    trimming(&t,&ul,&uh,&c, &rsa);
+
+    mpz_mul(a, a, t);
+    mpz_div(a, a, ul);
+
+    mpz_mul(b, b, t);
+    mpz_div(b, b, uh);
 
     Interval interval;
     set_interval(&interval,a,b);
@@ -76,6 +84,13 @@ int main() {
 
     int times2b = 0;
     int times2c = 0;
+
+    mpz_add(s, rsa.N, B2);
+    mpz_cdiv_q(s, s, b);
+    gmp_printf("Minimal possible value for s: %Zd (n / B3)\n", s);
+
+
+
 
     int j = 0;
     printf("\n\n----------- Starting the Attack -----------\n\n");
@@ -133,6 +148,9 @@ int main() {
     mpz_clear(a);
     mpz_clear(b);
     mpz_clear(s);
+    mpz_clear(t);
+    mpz_clear(uh);
+    mpz_clear(ul);
     return 0;
 }
 
