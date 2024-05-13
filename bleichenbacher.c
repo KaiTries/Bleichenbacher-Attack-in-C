@@ -1,13 +1,22 @@
 #include "bleichenbacher.h"
+#include <time.h>
+#include <stdio.h>
 
 #define TRIMMER_LIMIT 500
 
 mpz_t B, B2, B3;
+clock_t start_time, end_time, start_time_2, end_time_2;
+double cpu_time_used, cpu_time_used_2;
 RSA rsa;
+char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
+char depadded_output_char[RSA_BLOCK_BYTE_SIZE];
+
+void print(char *string) {
+    printf("%s\n",string);
+}
 
 void setup() {
     generate(&rsa);
-    
     mpz_init(B);  mpz_setbit(B, 8 * (RSA_BLOCK_BYTE_SIZE - 2));
     mpz_init(B2); mpz_mul_ui(B2, B, 2);
     mpz_init(B3); mpz_mul_ui(B3, B, 3);
@@ -20,11 +29,8 @@ void setup() {
     }  
 }
 
-/*
-https://stackoverflow.com/questions/19738919/gcd-function-for-c
-*/
-int gcd(int a, int b)
-{
+int gcd(int a, int b) {
+    // https://stackoverflow.com/questions/19738919/gcd-function-for-c
     int temp;
     while (b != 0)
     {
@@ -116,7 +122,6 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
             }
         }
     }
-    printf("Conducted %d trimmings and found %d candidates.\n", counter, idx);
 
     if (idx == 0) {
         mpz_set_ui(*t_prime, 1);
@@ -126,7 +131,6 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     }
 
     int denom = lcm(ts,idx);
-    printf("lcm of ts: %d\n",denom);
 
     // 2t / 3 < u < 3t / 2
     double min_u = (2 * denom) / 3.0;
@@ -141,26 +145,50 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     int u_lower = 1;
     int u_upper = 1;
 
-    for (int i = min_u + 1; i <= max_u_lower; i++) {
-        if (test2(i, denom, c, rsa) && u_lower == 1) {
-            u_lower = i;
-            break;
+    // binary search for upper and lower u
+    while(max_u_lower - min_u != 1) {
+        u = (max_u_lower + min_u) / 2;
+        counter++;
+        if(test2(u, denom, c, rsa)) {
+            max_u_lower = u;
+        } else {
+            min_u = u;
         }
     }
+    u_lower = max_u_lower;
 
-    for (int i = max_u - 1; i >= min_u_upper ; i--) {
-        if (test2(i, denom, c, rsa) && u_upper == 1) {
-            u_upper = i;
-            break;
+    while(min_u_upper + 1 !=  max_u) {
+        u = (min_u_upper + max_u) / 2;
+        counter++;
+        if(test2(u, denom, c, rsa)) {
+            min_u_upper = u;
+        } else {
+            max_u = u;
         }
     }
-    printf("lower u: %d, upper u: %d\n", u_lower, u_upper);
+    u_upper = min_u_upper;
 
     mpz_set_ui(*t_prime, denom);
     mpz_set_ui(*ul, u_lower);
     mpz_set_ui(*uh, u_upper);
 }
 
+void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
+    mpz_t c_prime;
+    mpz_add_ui(*s,*s,1);
+    mpz_init(c_prime);
+
+    while(1) {
+        mpz_powm(c_prime, *s, rsa.E, rsa.N);
+        mpz_mul(c_prime, c_prime, *c);
+        mpz_mod(c_prime, c_prime, rsa.N);
+        if (oracle(&c_prime, &rsa)) {
+            mpz_clear(c_prime);
+            return;
+        }
+        mpz_add_ui(*s,*s,1);
+    }
+}
 
 void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
     mpz_t r, c_prime, comparison;
@@ -202,13 +230,6 @@ void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
     mpz_clear(r);
     mpz_clear(comparison);
     mpz_clear(c_prime);
-}
-
-void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
-    for (size_t j = 0; j < set->size; j++) {
-        int result = searchingWithOneIntervalLeft(&set->intervals[j], c, s);
-        if(result) break;
-    }
 }
 
 int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
@@ -265,6 +286,13 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
     mpz_clear(r2);
     mpz_clear(c_prime);
     return 0;
+}
+
+void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
+    for (size_t j = 0; j < set->size; j++) {
+        int result = searchingWithOneIntervalLeft(&set->intervals[j], c, s);
+        if(result) break;
+    }
 }
 
 void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
@@ -337,6 +365,291 @@ void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
     mpz_clear(bb);
 }
 
+void baseAttack(mpz_t *c) {
+    // ListOfIntervals = [(2B, 3B - 1)]
+    mpz_t s, a, b;
+    mpz_init_set(a,B2);
+    mpz_init_set(b,B3);
+    mpz_sub_ui(b, b, 1);
+    mpz_init_set_ui(s,1);
 
+    mpz_div(s,rsa.N,B3);
+
+    Interval interval;
+    set_interval(&interval,a,b);
+    IntervalSet set;
+    init_interval_set(&set);
+    add_interval(&set, &interval);
+
+    int times2b = 0;
+    int times2c = 0;
+    int j = 0;
+    printf("\n-------- BASE BLEICHENBACHER ATTACK --------\n");
+    printf("----------- Starting the Attack ------------\n");
+    start_time = clock();
+    start_time_2 = clock();
+    findNextS_iteratively(c, &s, &a, &b);
+    end_time_2 = clock();
+    findNewIntervals(&set, &s);
+    while(1) {
+        if(set.size > 1) {
+            findNextS_iteratively(c, &s, &a, &b);
+            times2b++;
+        } else { 
+            if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+                mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+                prepareOutput(depadded_output_char, decrypted_input_char);
+                printf("Decrypted message: ");
+                printf("%s",depadded_output_char);
+                print("===============================================================");
+                break;
+            }
+            searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+            times2c++;
+        }
+        findNewIntervals(&set, &s);
+
+        if (set.size == 0) {
+            printf("No solution found\n");
+            break;
+        }
+        j++;
+    }
+
+
+    end_time = clock();
+    cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+    cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+    printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Execution time: %f seconds\n", cpu_time_used);
+    printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(s);
+    free_interval_set(&set);
+}
+
+void trimmersOnly(mpz_t *c) {
+    // ListOfIntervals = [(2B, 3B - 1)]
+    mpz_t s, a, b, t, ul, uh;
+    mpz_init(t);
+    mpz_init(ul);
+    mpz_init(uh);
+    mpz_init_set(a,B2);
+    mpz_init_set(b,B3);
+    mpz_sub_ui(b, b, 1);
+    mpz_init_set_ui(s,1);
+
+    trimming(&t,&ul,&uh,c, &rsa);
+
+    mpz_mul(a, a, t);
+    mpz_div(a, a, ul);
+
+    mpz_mul(b, b, t);
+    mpz_div(b, b, uh);
+
+    mpz_add(s, rsa.N, B2);
+    mpz_cdiv_q(s, s, b);
+
+    Interval interval;
+    set_interval(&interval,a,b);
+    IntervalSet set;
+    init_interval_set(&set);
+    add_interval(&set, &interval);
+
+    int times2b = 0;
+    int times2c = 0;
+    int j = 0;
+    printf("\n------- BLEICHENBACHER WITH TRIMMERS -------\n");
+    printf("----------- Starting the Attack ------------\n");
+    start_time = clock();
+    start_time_2 = clock();
+    findNextS_iteratively(c, &s, &a, &b);
+    end_time_2 = clock();
+    findNewIntervals(&set, &s);
+    while(1) {
+        if(set.size > 1) {
+            findNextS_iteratively(c, &s, &a, &b);
+            times2b++;
+        } else { 
+            if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+                mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+                prepareOutput(depadded_output_char, decrypted_input_char);
+                printf("Decrypted message: ");
+                printf("%s",depadded_output_char);
+                print("===============================================================");
+                break;
+            }
+            searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+            times2c++;
+        }
+        findNewIntervals(&set, &s);
+
+        if (set.size == 0) {
+            printf("No solution found\n");
+            break;
+        }
+        j++;
+    }
+
+
+    end_time = clock();
+    cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+    cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+    printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Execution time: %f seconds\n", cpu_time_used);
+    printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(s);
+    mpz_clear(t);
+    mpz_clear(uh);
+    mpz_clear(ul);
+    free_interval_set(&set);
+}
+
+void optimizedWithoutTrimmers(mpz_t *c) {
+    // ListOfIntervals = [(2B, 3B - 1)]
+    mpz_t s, a, b;
+    mpz_init_set(a,B2);
+    mpz_init_set(b,B3);
+    mpz_sub_ui(b, b, 1);
+    mpz_init_set_ui(s,1);
+
+    mpz_div(s,rsa.N,B3);
+
+    Interval interval;
+    set_interval(&interval,a,b);
+    IntervalSet set;
+    init_interval_set(&set);
+    add_interval(&set, &interval);
+
+    int times2b = 0;
+    int times2c = 0;
+    int j = 0;
+    printf("\n-------- OPTIMIZED WITHOUT TRIMMERS --------\n");
+    printf("----------- Starting the Attack ------------\n");
+    start_time = clock();
+    start_time_2 = clock();
+    findNextS_2a(c, &s, &a, &b);
+    end_time_2 = clock();
+    findNewIntervals(&set, &s);
+    while(1) {
+        if(set.size > 1) {
+            findNextS_multipleIntervals(&set, c, &s);
+            times2b++;
+        } else { 
+            if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+                mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+                prepareOutput(depadded_output_char, decrypted_input_char);
+                printf("Decrypted message: ");
+                printf("%s",depadded_output_char);
+                print("===============================================================");
+                break;
+            }
+            searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+            times2c++;
+        }
+        findNewIntervals(&set, &s);
+
+        if (set.size == 0) {
+            printf("No solution found\n");
+            break;
+        }
+        j++;
+    }
+
+
+    end_time = clock();
+    cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+    cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+    printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Execution time: %f seconds\n", cpu_time_used);
+    printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(s);
+    free_interval_set(&set);
+}
+
+void fullyOptimizedAttack(mpz_t *c) {
+    // ListOfIntervals = [(2B, 3B - 1)]
+    mpz_t s, a, b, t, ul, uh;
+    mpz_init(t);
+    mpz_init(ul);
+    mpz_init(uh);
+    mpz_init_set(a,B2);
+    mpz_init_set(b,B3);
+    mpz_sub_ui(b, b, 1);
+    mpz_init_set_ui(s,1);
+
+    trimming(&t,&ul,&uh,c, &rsa);
+
+    mpz_mul(a, a, t);
+    mpz_div(a, a, ul);
+
+    mpz_mul(b, b, t);
+    mpz_div(b, b, uh);
+
+    Interval interval;
+    set_interval(&interval,a,b);
+    IntervalSet set;
+    init_interval_set(&set);
+    add_interval(&set, &interval);
+
+    int times2b = 0;
+    int times2c = 0;
+    int j = 0;
+    printf("\n---- OPTIMIZED BLEICHENBACHER ALGORITHM ----\n");
+    printf("----------- Starting the Attack ------------\n");
+    start_time = clock();
+    start_time_2 = clock();
+    findNextS_2a(c, &s, &a, &b);
+    end_time_2 = clock();
+    findNewIntervals(&set, &s);
+    while(1) {
+        if(set.size > 1) {
+            findNextS_multipleIntervals(&set, c, &s);
+            times2b++;
+        } else { 
+            if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+                mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+                prepareOutput(depadded_output_char, decrypted_input_char);
+                printf("Decrypted message: ");
+                printf("%s",depadded_output_char);
+                print("===============================================================");
+                break;
+            }
+            searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+            times2c++;
+        }
+        findNewIntervals(&set, &s);
+
+        if (set.size == 0) {
+            printf("No solution found\n");
+            break;
+        }
+        j++;
+    }
+
+
+    end_time = clock();
+    cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
+    cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+    printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Execution time: %f seconds\n", cpu_time_used);
+    printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+    mpz_clear(a);
+    mpz_clear(b);
+    mpz_clear(s);
+    mpz_clear(t);
+    mpz_clear(uh);
+    mpz_clear(ul);
+    free_interval_set(&set);
+}
 
 

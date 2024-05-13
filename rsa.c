@@ -25,6 +25,28 @@ int prepareInput(char *output, char *input) {
     return 0;
 }
 
+int prepareOutput(char *output, char *input) {
+    int i = 4;
+    // Skip the padding bytes
+    while (input[i * 2] != '0' || input[i * 2 + 1] != '0') {
+        i++;
+    }
+    // Skip the '00' byte
+    i++;
+
+    // Copy the rest of the input to the output
+    int j = 0;
+    while (input[i * 2] != '\0' && input[i * 2 + 1] != '\0') {
+        sscanf(&input[i * 2], "%02hhx", &output[j]);
+        i++;
+        j++;
+    }
+
+    // Null-terminate the output string
+    output[j] = '\0';
+    return 0;
+}
+
 void encrypt(mpz_t *output, mpz_t *input, RSA *rsa) {
     mpz_powm(*output,*input,rsa->E,rsa->N);
 

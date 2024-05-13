@@ -10,17 +10,14 @@ extern RSA rsa;
 // sets up environment for the attack
 void setup();
 
-// trimming
-void trimming(mpz_t *t, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa);
+// base bleichenbacher attack as outlined in original paper
+void baseAttack(mpz_t *c);
 
-// optimized step for the iterative searching of s
-void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b);
+// base bleichenbacher but with trimmed initial interval
+void trimmersOnly(mpz_t *c);
 
-// searches the last Interval with given algorithm
-int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s);
+// All optimizations except trimmers
+void optimizedWithoutTrimmers(mpz_t *c);
 
-// searches through each interval with the same strategy as if only one interval left
-void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s);
-
-// Finds new possible intervals
-void findNewIntervals(IntervalSet *priorSet, mpz_t *s);
+// optimized bleichenbacher attack
+void fullyOptimizedAttack(mpz_t *c);

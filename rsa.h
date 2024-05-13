@@ -18,6 +18,9 @@ typedef struct RSA {
 // creates PKCS conform output string
 int prepareInput(char *output, char *input);
 
+// stripts PKCS padding away
+int prepareOutput(char *output, char *input);
+
 // encrypts input with the given RSA key
 void encrypt(mpz_t *output, mpz_t *input, RSA *rsa);
 
