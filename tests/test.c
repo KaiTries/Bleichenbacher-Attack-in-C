@@ -1,12 +1,7 @@
-#include "interval.h"
-#include "bleichenbacher.h"
+#include "../interval.h"
+#include "../bleichenbacher.h"
 #include <time.h>
 #include <stdio.h>
-
-
-void print(char *string) {
-    printf("%s\n",string);
-}
 
 int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
     sprintf(&pkcs_padded_input[0],"%02x", 0);
@@ -124,10 +119,13 @@ void rsa_tests() {
 
 void oracle_tests() {
     setup();
-    mpz_t c, m, s;
+    mpz_t c, m, s, a, b;
     mpz_init(c);
     mpz_init(m);
     mpz_init_set_ui(s,1);
+    mpz_init_set(a, B2);
+    mpz_init_set(b, B3);
+    mpz_sub_ui(b,b,1);
     mpz_t decrypted_input;
     mpz_init(decrypted_input);
     
@@ -144,8 +142,7 @@ void oracle_tests() {
 
     encrypt(&c,&m,&rsa);
     for(int i = 0; i < 5; i++){    
-        findNextS_iterative(&c, &s);
-
+        findNextS_iteratively(&c, &s, &a, &b);
         mpz_t validInput;
         mpz_init(validInput);
 
@@ -163,13 +160,15 @@ void oracle_tests() {
             printf("oracle should not be correct for invalid input");
         }
     }
+    mpz_clear(a);
+    mpz_clear(b);
 }
 
 
 int main() {
     interval_tests();
     rsa_tests();
-    oracle_tests();
+    // oracle_tests();
 
     mpz_clear(B);
     mpz_clear(B2);

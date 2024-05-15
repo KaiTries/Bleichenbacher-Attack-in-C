@@ -10,6 +10,9 @@ extern RSA rsa;
 // sets up environment for the attack
 void setup();
 
+// base S search function
+void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b);
+
 // base bleichenbacher attack as outlined in original paper
 void baseAttack(mpz_t *c);
 
