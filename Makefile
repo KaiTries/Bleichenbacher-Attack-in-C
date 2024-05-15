@@ -2,7 +2,7 @@
 CC = cc
 
 # Compiler flags
-CFLAGS = -I /opt/homebrew/include -I ..
+CFLAGS = -I /opt/homebrew/include
 
 # Linker flags
 LDFLAGS = -L /opt/homebrew/lib -lgmp
