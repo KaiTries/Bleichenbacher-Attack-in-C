@@ -1,6 +1,5 @@
 # ignore the binary
 main
-*.out
 
 # ignore output files
 *.o
