@@ -74,7 +74,49 @@ One of the main findings was that just as multiplication and exponantion can be 
 
 The relevant code for this improvement can be found [here](https://github.com/KaiTries/Bleichenbacher-Attack-in-C/blob/main/bleichenbacher.c#L103). The reason for the specific limiters of t and the amount of queries, is because the original authors of the method were a bit obscure and the author of the current paper found these values through stochastics. There is no actual scientific proof, but it was found, that 500 oracle calls are the most optimal amount and that the values for t/u should be between 2/3 and 3/2. Using binary search to find the lower and upper u values is crucial, since the search space can get rather big.
 
-### 
+```c
+void trimming() {
+    // initialize data structures to hold candidates for u and t
+    
+    // loop through possible t values
+    for (int t = 3; t < 10000; t++) {
+        // u and t should be close together so real values are t-1 / t and t+1 / t
+        for (u = t-1; u < t+2; u++) {
+            // if t and u are valid ad them to the data structures
+            if (u & t valid) {
+                us[idx] = u;
+                ts[idx++] = t;
+            }
+        }
+    }
+    
+
+    // it is possible (but unlikely) that no trimmers are found, set to 1 in this case -> 2B and 3B
+    if (idx == 0) {
+        // set outputs to 1
+    }
+
+    // for t find the lcm of all found t values
+    int denom = lcm(ts,idx);
+
+    // 2t / 3 < u < 3t / 2
+
+    // max bound for u_lower is u_a / t_a
+    // min bound for u_upper is u_b / t_b
+
+
+    // binary search for upper and lower u
+    while(max_u_lower - min_u != 1) {
+        // search
+    }
+
+    while(min_u_upper + 1 !=  max_u) {
+        // search
+    }
+    // return the two found us
+}
+```
+### Improvement for searching over multiple intervals 
 
 
 ## How to use
