@@ -67,6 +67,14 @@ void findNewIntervals() {
 
 ```
 ## Improvements
+Since the invention of the original algorithm several improvements have been suggested. [this paper](https://www.royalholloway.ac.uk/media/9093/techreport-gageboyle.pdf) highlights some major improvements over the past 20 years. It also serves as one of the papers my implementations are based on, the other one being [this article](https://link.springer.com/chapter/10.1007/978-3-031-17510-7_10).
+
+### Trimmers
+One of the main findings was that just as multiplication and exponantion can be used to find the original message, division is just as useful in making the search space smaller. So the first improvement that I implemented was the trimmers. Trimming is to be done before the start of the algorithm, but an oracle is still needed for this step. The idea is, that there exist some integer t that divides the original message m and using this integer we can make the initial search space smaller than starting betwen 2B and 3B.
+
+The relevant code for this improvement can be found [here](https://github.com/KaiTries/Bleichenbacher-Attack-in-C/blob/main/bleichenbacher.c#L103). The reason for the specific limiters of t and the amount of queries, is because the original authors of the method were a bit obscure and the author of the current paper found these values through stochastics. There is no actual scientific proof, but it was found, that 500 oracle calls are the most optimal amount and that the values for t/u should be between 2/3 and 3/2. Using binary search to find the lower and upper u values is crucial, since the search space can get rather big.
+
+### 
 
 
 ## How to use
@@ -81,7 +89,7 @@ brew install gmp
 
 To build the script simply run (make sure you have the correct folders linked):
 ```bash
-cc main.c interval.c bleichenbacher_base.c rsa.c -I /opt/homebrew/include -L /opt/homebrew/lib -lgmp
+make
 ```
 
 After building you can execute the script with:
