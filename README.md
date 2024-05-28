@@ -117,8 +117,53 @@ void trimming() {
 }
 ```
 ### Improvement for searching over multiple intervals 
+Another proposed improvement is to step 2b, which describes the procedure when there are multiple intervals left in the set of intervals. Since in the original interval this just meant iteratively searching for a new integer s. As iteratively searching for a new s is very slow, the proposed change is to use the method of step 2c and adapt it to multiple intervals. This adaption make sense, since we know that the original m has to be in any of the intervals, so the advanced search will work. 
 
+In my Implementation, I simply iterated over the set of intervals and applied step2c to one interval after the other, stopping once i found a new valid s. This implementation could be further improved, by paralellising it and stopping all threads once one has found a solution.
+```c
+void findNextS_multipleIntervals() {
+    // iterate over set of intervals
+    for (size_t j = 0; j < set->size; j++) {
+        // do step 3c for each interval
+        int result = searchingWithOneIntervalLeft(&set->intervals[j], c, s);
+        // abandon the left over intervals once done
+        if(result) break;
+    }
+}
+```
+### Better way to search for s instead of iteratively
+In the original algorithm a lot of time is spent finding the first s in step 2a. Since we just iteratively increase s by 1 and check if it is valid. We can improve this step by skipping over s values that cannot produce a valid result and by increasing the starting value. Decreasing the lower bound (increasing the starting value) has the biggest effect, if it is done in combination with the trimming. Below it is demonstrated, that the first s must be larger or equal to $\frac{n + 2B}{3B - 1}$. 
+$\\
+m_0 \cdot s_1 \geq n + 2B \\
+(3B - 1) \cdot s_1 \geq n + 2B \\
+s_1 \geq \frac{n + 2B}{3B - 1}\\
+$
+Since in the trimming step we replace the initial higher bound of 3B - 1 with b we end up with $s_1 \geq \frac{n + 2B}{b}$. Which gives us a better starting point. The second way to improve step 2a is to skip values of s that cannot produce valid results. This is doable, because even if we do not know yet which s will be correct, we know that if we find a correct s $2B \leq m_0 \cdot s_1 \mod n < 3B$ will hold. This knowledge allows us to rearrange the equation to: $\frac{2B + jn}{b} \leq s_1 < \frac{3B + jn}{a}$. As a result from this, we know that for any given integer j for which the following is true: $\frac{3B + jn}{a} < \frac{2B + (j+1)n}{b}$. No suitable s in this range can be found! Therefore we can skip all values $\frac{3B + jn}{a} \leq s_1 < \frac{2B + (j+1)n}{b}$.
 
+My implementation of this improvement can be found [here](https://github.com/KaiTries/Bleichenbacher-Attack-in-C/blob/main/bleichenbacher.c#L193). It follows the original implementation by the authors. Since we are given the initial value of s, we rearrange the equation of $\frac{3B + jn}{a} \leq s$ to $\frac{(s * a) - 3B}{n} = j$. This gives us a j for which we can then calculate the second point $\frac{2B + (j + 1) * n}{b}$. If this second point is bigger than the first we know that the s value cannot be valid and we will not query the oracle.
+```c
+void findNextS_2a() {
+    // s is initially equal to (n + 2B) / b
+    while(1) {
+        // j = ((s * a) - 3B) / n
+        // compare = (2B + (j + 1) * n) / b
+
+        // check if s is in the hole given by j and compare
+        if (mpz_cmp(*s,comparison) >= 0) {
+            // compute c_prime and query oracle
+            if (oracle(&c_prime, &rsa)) {
+                // if oracle returns 1 we found next valid s
+                return;
+            }
+            // increase s by one and repeat
+            mpz_add_ui(*s,*s,1);
+        } else {
+            // if s is in the hole we set s to the end of the hole and repeat
+            mpz_set(*s, comparison);
+        }
+    }
+}
+```
 ## How to use
 Simply clone the repository and follow the steps below to try it out yourself!
 
