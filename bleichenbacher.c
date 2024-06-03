@@ -1,4 +1,5 @@
 #include "bleichenbacher.h"
+#include "interval.h"
 #include <time.h>
 #include <stdio.h>
 

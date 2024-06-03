@@ -1,8 +1,5 @@
 #pragma once
-#include "interval.h"
 #include "rsa.h"
-#include <stdio.h>
-#include <string.h>
 
 extern mpz_t B, B2, B3;
 extern RSA rsa;

@@ -1,4 +1,6 @@
 #include "interval.h"
+#include <string.h>
+#include <stdlib.h>
 
 void init_interval(Interval* interval) {
     mpz_init(interval->lower);

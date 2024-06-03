@@ -1,7 +1,5 @@
 #pragma once
 #include <gmp.h>
-#include <stdlib.h>
-#include <stdio.h>
 
 #define RSA_BLOCK_BYTE_SIZE 128
 #define RSA_PUBLIC_KEY_SIZE 1024

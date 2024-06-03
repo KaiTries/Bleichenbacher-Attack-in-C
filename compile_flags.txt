@@ -1,0 +1,5 @@
+-I
+/opt/homebrew/include
+-L 
+/opt/homebrew/lib 
+-lgmp
