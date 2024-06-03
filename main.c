@@ -21,6 +21,9 @@ void get_user_input(mpz_t *m){
     mpz_set_str(*m, pkcs_padded_input, 16);
 }
 
+/**
+ * Runs 3 different bleichenbacher attacks on some message given by the user
+ */
 int main() {
     mpz_t m, c;
     mpz_init(m); mpz_init(c);
@@ -38,6 +41,7 @@ int main() {
     baseAttack(&c);
 
     mpz_clear(c);
+    mpz_clear(m);
     return 0;
 }
 
