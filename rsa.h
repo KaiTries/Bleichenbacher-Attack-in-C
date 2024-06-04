@@ -8,9 +8,9 @@
 extern int oracleCalls;
 
 typedef struct RSA {
-    mpz_t E;
-    mpz_t D;
-    mpz_t N;
+  mpz_t E;
+  mpz_t D;
+  mpz_t N;
 } RSA;
 
 // creates PKCS conform output string
