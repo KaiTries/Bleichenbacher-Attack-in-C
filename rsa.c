@@ -139,16 +139,26 @@ void mpz_to_hex_array(char *hex_string, mpz_ptr number) {
   }
 }
 
-int oracle(mpz_ptr number, RSA *rsa) {
+int oracle(mpz_ptr number, RSA *rsa, mpz_ptr B2, mpz_ptr B3) {
+  oracleCalls++;
   mpz_t decrypted_input;
   mpz_init(decrypted_input);
   decrypt(decrypted_input, number, rsa);
+  // Simple oracle that only checks if 00 02
+  if (mpz_cmp(B3, decrypted_input) <= 0)
+    return 0;
+  if (mpz_cmp(B2, decrypted_input) > 0)
+    return 0;
+
+  return 1;
+
+  /*
   mpz_to_hex_array(oracleString, decrypted_input);
-  oracleCalls++;
   mpz_clear(decrypted_input);
   if (oracleString[0] != '0' || oracleString[1] != '0')
     return 0;
   if (oracleString[2] != '0' || oracleString[3] != '2')
     return 0;
   return 1;
+  */
 }

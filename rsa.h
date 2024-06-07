@@ -32,4 +32,4 @@ void generate(RSA *rsa);
 void mpz_to_hex_array(char *hex_string, mpz_ptr number);
 
 // returns 1 if the given number is PKCS conforming
-int oracle(mpz_ptr number, RSA *rsa);
+int oracle(mpz_ptr number, RSA *rsa, mpz_ptr B2, mpz_ptr B3);

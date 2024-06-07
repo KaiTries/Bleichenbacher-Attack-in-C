@@ -8,7 +8,8 @@
 #define TRIMMER_LIMIT 500
 
 mpz_t B, B2, B3;
-clock_t start_time, end_time, start_time_2, end_time_2;
+clock_t start_time, end_time, intervalStart, intervalEnd, searchingOneStart,
+    searchingOneEnd, searchingMultipleStart, searchingMultipleEnd;
 double cpu_time_used, cpu_time_used_2;
 RSA rsa;
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
@@ -64,7 +65,7 @@ int test2(int u_int, int t_int, mpz_ptr c, RSA *rsa) {
   mpz_mul(c_prime, a, b);
   mpz_mul(c_prime, c_prime, c);
   mpz_mod(c_prime, c_prime, rsa->N);
-  if (oracle(c_prime, rsa)) {
+  if (oracle(c_prime, rsa, B2, B3)) {
     mpz_clears(u, t, t_inv, a, b, c_prime, NULL);
     return 1;
   }
@@ -170,7 +171,7 @@ void findNextS_iteratively(mpz_ptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
     mpz_powm(c_prime, s, rsa.E, rsa.N);
     mpz_mul(c_prime, c_prime, c);
     mpz_mod(c_prime, c_prime, rsa.N);
-    if (oracle(c_prime, &rsa)) {
+    if (oracle(c_prime, &rsa, B2, B3)) {
       mpz_clear(c_prime);
       return;
     }
@@ -180,7 +181,9 @@ void findNextS_iteratively(mpz_ptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
 
 void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
   mpz_t r, c_prime, comparison;
-  mpz_inits(r, c_prime, comparison, NULL);
+  mpz_init2(r, 1024);
+  mpz_init2(comparison, 1024);
+  mpz_init2(c_prime, 1024);
 
   mpz_add(s, rsa.N, B2);
   mpz_cdiv_q(s, s, b);
@@ -201,7 +204,7 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
       mpz_powm(c_prime, s, rsa.E, rsa.N);
       mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
-      if (oracle(c_prime, &rsa)) {
+      if (oracle(c_prime, &rsa, B2, B3)) {
         mpz_clears(r, c_prime, comparison, NULL);
         return;
       }
@@ -215,7 +218,8 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
 
 int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
   mpz_t a, b, r, r1, r2, c_prime;
-  mpz_inits(r1, r2, r, c_prime, NULL);
+  mpz_init2(r, 1024);
+  mpz_inits(r1, r2, c_prime, NULL);
 
   mpz_init_set(a, interval[0].lower);
   mpz_init_set(b, interval[0].upper);
@@ -244,7 +248,7 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
       mpz_powm(c_prime, s, rsa.E, rsa.N);
       mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
-      if (oracle(c_prime, &rsa)) {
+      if (oracle(c_prime, &rsa, B2, B3)) {
         mpz_clears(a, b, r, r1, r2, c_prime, NULL);
         return 1;
       }
@@ -267,7 +271,8 @@ void findNextS_multipleIntervals(IntervalSet *set, mpz_ptr c, mpz_ptr s) {
 
 void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
   mpz_t a, b, r, r1, r2, aa, bb;
-  mpz_inits(a, b, r, r1, r2, aa, bb, NULL);
+  mpz_init2(r, 1024);
+  mpz_inits(a, b, r1, r2, aa, bb, NULL);
 
   Interval interval;
   IntervalSet set;
@@ -293,16 +298,22 @@ void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
     mpz_add_ui(r2, r2, 1);
 
     for (mpz_set(r, r1); mpz_cmp(r, r2) <= 0; mpz_add_ui(r, r, 1)) {
-      // aa = ceil(B2 + r*N, s)
+      // a = max(a, min((2B + r * n) / s, b))
+      // b = min(b, max((B3 - 1 + r * n) / s, a))
       mpz_mul(aa, r, rsa.N);
       mpz_add(aa, aa, B2);
       mpz_cdiv_q(aa, aa, s);
+      if (mpz_cmp(aa, b) > 0) {
+        mpz_set(aa, b);
+      }
 
-      // bb = floor(B3 - 1 + r*N, s)
       mpz_mul(bb, r, rsa.N);
       mpz_add(bb, bb, B3);
       mpz_sub_ui(bb, bb, 1);
       mpz_fdiv_q(bb, bb, s);
+      if (mpz_cmp(bb, a) < 0) {
+        mpz_set(bb, a);
+      }
 
       if (mpz_cmp(aa, a) > 0) {
         mpz_set(a, aa);
@@ -347,9 +358,9 @@ void baseAttack(mpz_ptr c) {
   printf("\n-------- BASE BLEICHENBACHER ATTACK --------\n");
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
-  start_time_2 = clock();
+  intervalStart = clock();
   findNextS_iteratively(c, s, a, b);
-  end_time_2 = clock();
+  intervalEnd = clock();
   findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
@@ -357,12 +368,14 @@ void baseAttack(mpz_ptr c) {
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
+        /*
         mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
         prepareOutput(depadded_output_char, decrypted_input_char);
         printf("Decrypted message: ");
         printf("%s", depadded_output_char);
         print(
             "===============================================================");
+        */
         break;
       }
       searchingWithOneIntervalLeft(&set.intervals[0], c, s);
@@ -379,14 +392,12 @@ void baseAttack(mpz_ptr c) {
 
   end_time = clock();
   cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-  cpu_time_used_2 = ((double)(end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+  cpu_time_used_2 = ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
   printf("Number of oracle calls: %d\n", oracleCalls);
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(s);
+  mpz_clears(a, b, s);
   free_interval_set(&set);
 }
 
@@ -400,7 +411,7 @@ void trimmersOnly(mpz_ptr c) {
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
   mpz_sub_ui(b, b, 1);
-  mpz_init_set_ui(s, 1);
+  mpz_init2(s, 1024);
 
   trimming(t, ul, uh, c, &rsa);
 
@@ -425,9 +436,9 @@ void trimmersOnly(mpz_ptr c) {
   printf("\n------- BLEICHENBACHER WITH TRIMMERS -------\n");
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
-  start_time_2 = clock();
+  intervalStart = clock();
   findNextS_iteratively(c, s, a, b);
-  end_time_2 = clock();
+  intervalEnd = clock();
   findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
@@ -435,12 +446,6 @@ void trimmersOnly(mpz_ptr c) {
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
-        prepareOutput(depadded_output_char, decrypted_input_char);
-        printf("Decrypted message: ");
-        printf("%s", depadded_output_char);
-        print(
-            "===============================================================");
         break;
       }
       searchingWithOneIntervalLeft(&set.intervals[0], c, s);
@@ -457,30 +462,23 @@ void trimmersOnly(mpz_ptr c) {
 
   end_time = clock();
   cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-  cpu_time_used_2 = ((double)(end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+  cpu_time_used_2 = ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
   printf("Number of oracle calls: %d\n", oracleCalls);
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(s);
-  mpz_clear(t);
-  mpz_clear(uh);
-  mpz_clear(ul);
+  mpz_clears(a, b, s, t, uh, ul);
   free_interval_set(&set);
 }
 
 void optimizedWithoutTrimmers(mpz_ptr c) {
   oracleCalls = 0;
 
-  // ListOfIntervals = [(2B, 3B - 1)]
   mpz_t s, a, b;
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
   mpz_sub_ui(b, b, 1);
-  mpz_init_set_ui(s, 1);
-
+  mpz_init2(s, 1024);
   mpz_div(s, rsa.N, B3);
 
   Interval interval;
@@ -495,9 +493,9 @@ void optimizedWithoutTrimmers(mpz_ptr c) {
   printf("\n-------- OPTIMIZED WITHOUT TRIMMERS --------\n");
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
-  start_time_2 = clock();
+  intervalStart = clock();
   findNextS_2a(c, s, a, b);
-  end_time_2 = clock();
+  intervalEnd = clock();
   findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
@@ -505,12 +503,6 @@ void optimizedWithoutTrimmers(mpz_ptr c) {
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
-        prepareOutput(depadded_output_char, decrypted_input_char);
-        printf("Decrypted message: ");
-        printf("%s", depadded_output_char);
-        print(
-            "===============================================================");
         break;
       }
       searchingWithOneIntervalLeft(&set.intervals[0], c, s);
@@ -527,20 +519,17 @@ void optimizedWithoutTrimmers(mpz_ptr c) {
 
   end_time = clock();
   cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-  cpu_time_used_2 = ((double)(end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
+  cpu_time_used_2 = ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
   printf("Number of oracle calls: %d\n", oracleCalls);
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(s);
+  mpz_clears(a, b, s);
   free_interval_set(&set);
 }
 
 void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
   oracleCalls = 0;
-  // ListOfIntervals = [(2B, 3B - 1)]
   mpz_t s, a, b, t, ul, uh;
   mpz_init_set_ui(t, 1);
   mpz_init_set_ui(ul, 1);
@@ -567,46 +556,73 @@ void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
 
   int times2b = 0;
   int times2c = 0;
+  double totalTimeInterval = 0.0;
+  double totalTimeMultipleIntervals = 0.0;
+  double totalTimeOneInterval = 0.0;
   int j = 0;
-  printf("\n---- OPTIMIZED BLEICHENBACHER ALGORITHM ----\n");
-  printf("----------- Starting the Attack ------------\n");
   start_time = clock();
-  start_time_2 = clock();
+  intervalStart = clock();
   findNextS_2a(c, s, a, b);
-  end_time_2 = clock();
+  intervalEnd = clock();
+  double timeForFirstS =
+      ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
+
+  intervalStart = clock();
   findNewIntervals(&set, s);
-  while (1) {
-    if (set.size > 1) {
-      findNextS_multipleIntervals(&set, c, s);
-      times2b++;
-    } else {
+  intervalEnd = clock();
+
+  totalTimeInterval += ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
+
+  int found = 0;
+  while (found == 0) {
+    switch (set.size) {
+    case 0:
+      printf("failed");
+      break;
+    case 1:
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
-        prepareOutput(depadded_output_char, decrypted_input_char);
-        printf("Decrypted message: ");
-        printf("%s\n", depadded_output_char);
-        print(
-            "===============================================================");
+        found = 1;
         break;
       }
+      searchingOneStart = clock();
       searchingWithOneIntervalLeft(&set.intervals[0], c, s);
+      searchingOneEnd = clock();
+      totalTimeOneInterval +=
+          ((double)(searchingOneEnd - searchingOneStart)) / CLOCKS_PER_SEC;
       times2c++;
-    }
-    findNewIntervals(&set, s);
-
-    if (set.size == 0) {
-      printf("No solution found\n");
+      break;
+    default:
+      searchingMultipleStart = clock();
+      findNextS_multipleIntervals(&set, c, s);
+      searchingMultipleEnd = clock();
+      totalTimeMultipleIntervals +=
+          ((double)(searchingMultipleEnd - searchingMultipleStart)) /
+          CLOCKS_PER_SEC;
+      times2b++;
       break;
     }
-    j++;
+    if (found == 0) {
+      intervalStart = clock();
+      findNewIntervals(&set, s);
+      intervalEnd = clock();
+
+      totalTimeInterval +=
+          ((double)(intervalEnd - intervalStart)) / CLOCKS_PER_SEC;
+    }
   }
 
   end_time = clock();
   cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-  cpu_time_used_2 = ((double)(end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
   printf("Number of oracle calls: %d\n", oracleCalls);
   printf("Execution time: %f seconds\n", cpu_time_used);
-  printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+  printf("Time taken to find first s: %f seconds\n", timeForFirstS);
+  printf("Total time spent creating Intervals: %f seconds\n",
+         totalTimeInterval);
+  printf("Total time spent searching Multiple Intervals: %f seconds\n",
+         totalTimeMultipleIntervals);
+  printf("Total time spent searching one interval: %f seconds\n",
+         totalTimeOneInterval);
 
   *calls = oracleCalls;
   *time = cpu_time_used;

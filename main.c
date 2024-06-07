@@ -65,6 +65,7 @@ void runXTimes(int version, int x, mpz_ptr c, mpz_ptr m) {
   double timeArr[x];
 
   for (int i = 0; i < x; i++) {
+    printf("iteration: %d\n", i);
     set_current_c(i, c, m);
     switch (version) {
     case 0:
