@@ -1,5 +1,7 @@
 #include "bleichenbacher.h"
+#include "gmp.h"
 #include "interval.h"
+#include "rsa.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -16,9 +18,8 @@ void print(char *string) { printf("%s\n", string); }
 
 void setup() {
   generate(&rsa);
-  mpz_init(B);
+  mpz_inits(B, B2, B3, NULL);
   mpz_setbit(B, 8 * (RSA_BLOCK_BYTE_SIZE - 2));
-  mpz_init(B2);
   mpz_mul_ui(B2, B, 2);
   mpz_init(B3);
   mpz_mul_ui(B3, B, 3);
@@ -49,14 +50,9 @@ int test1(int u, int t) {
   return 0;
 }
 
-int test2(int u_int, int t_int, mpz_t *c, RSA *rsa) {
+int test2(int u_int, int t_int, mpz_ptr c, RSA *rsa) {
   mpz_t u, t, t_inv, a, b, c_prime;
-  mpz_init(u);
-  mpz_init(t);
-  mpz_init(t_inv);
-  mpz_init(a);
-  mpz_init(b);
-  mpz_init(c_prime);
+  mpz_inits(u, t, t_inv, a, b, c_prime, NULL);
 
   mpz_set_ui(u, u_int);
   mpz_set_ui(t, t_int);
@@ -66,27 +62,17 @@ int test2(int u_int, int t_int, mpz_t *c, RSA *rsa) {
   mpz_powm(b, t_inv, rsa->E, rsa->N);
 
   mpz_mul(c_prime, a, b);
-  mpz_mul(c_prime, c_prime, *c);
+  mpz_mul(c_prime, c_prime, c);
   mpz_mod(c_prime, c_prime, rsa->N);
-  if (oracle(&c_prime, rsa)) {
-    mpz_clear(u);
-    mpz_clear(t);
-    mpz_clear(t_inv);
-    mpz_clear(a);
-    mpz_clear(b);
-    mpz_clear(c_prime);
+  if (oracle(c_prime, rsa)) {
+    mpz_clears(u, t, t_inv, a, b, c_prime, NULL);
     return 1;
   }
-  mpz_clear(u);
-  mpz_clear(t);
-  mpz_clear(t_inv);
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(c_prime);
+  mpz_clears(u, t, t_inv, a, b, c_prime, NULL);
   return 0;
 }
 
-int lcm(int *a, int length) {
+int lcm(long *a, int length) {
   int lcm = a[0];
   for (int i = 1; i < length; i++) {
     lcm = (lcm * a[i]) / gcd(lcm, a[i]);
@@ -103,15 +89,15 @@ int in_range(int u, int t) {
   return 0;
 }
 
-void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
+void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   int counter = 0;
-  int us[500];
-  int ts[500];
+  long us[500] = {0};
+  long ts[500] = {0};
   int idx = 0;
 
-  int t = 1, u;
+  long t, u;
 
-  for (t = 3; t < 10000; t++) {
+  for (t = 3; t < 4097; t++) {
     if (counter >= TRIMMER_LIMIT)
       break;
     for (u = t - 1; u < t + 2; u++) {
@@ -129,13 +115,10 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
   }
 
   if (idx == 0) {
-    mpz_set_ui(*t_prime, 1);
-    mpz_set_ui(*ul, 1);
-    mpz_set_ui(*uh, 1);
     return;
   }
 
-  int denom = lcm(ts, idx);
+  long denom = lcm(ts, idx);
 
   // 2t / 3 < u < 3t / 2
   double min_u = (2 * denom) / 3.0;
@@ -147,8 +130,8 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
   // min bound for u_upper is u_b / t_b
   double min_u_upper = (us[idx - 1] / (double)ts[idx - 1]) * denom;
 
-  int u_lower = 1;
-  int u_upper = 1;
+  long u_lower = 1;
+  long u_upper = 1;
 
   // binary search for upper and lower u
   while (max_u_lower - min_u != 1) {
@@ -173,41 +156,38 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
   }
   u_upper = min_u_upper;
 
-  mpz_set_ui(*t_prime, denom);
-  mpz_set_ui(*ul, u_lower);
-  mpz_set_ui(*uh, u_upper);
+  mpz_set_ui(t_prime, denom);
+  mpz_set_ui(ul, u_lower);
+  mpz_set_ui(uh, u_upper);
 }
 
-void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
+void findNextS_iteratively(mpz_ptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
   mpz_t c_prime;
-  mpz_add_ui(*s, *s, 1);
+  mpz_add_ui(s, s, 1);
   mpz_init(c_prime);
 
   while (1) {
-    mpz_powm(c_prime, *s, rsa.E, rsa.N);
-    mpz_mul(c_prime, c_prime, *c);
+    mpz_powm(c_prime, s, rsa.E, rsa.N);
+    mpz_mul(c_prime, c_prime, c);
     mpz_mod(c_prime, c_prime, rsa.N);
-    if (oracle(&c_prime, &rsa)) {
+    if (oracle(c_prime, &rsa)) {
       mpz_clear(c_prime);
       return;
     }
-    mpz_add_ui(*s, *s, 1);
+    mpz_add_ui(s, s, 1);
   }
 }
 
-void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
+void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
   mpz_t r, c_prime, comparison;
-  mpz_init(r);
-  mpz_init(c_prime);
-  mpz_init(comparison);
+  mpz_inits(r, c_prime, comparison, NULL);
 
-  mpz_add(*s, rsa.N, B2);
-  mpz_cdiv_q(*s, *s, *b);
+  mpz_add(s, rsa.N, B2);
+  mpz_cdiv_q(s, s, b);
 
-  int found = 0;
   while (1) {
     // r = ((s * a) - 3B) / n
-    mpz_mul(r, *s, *a);
+    mpz_mul(r, s, a);
     mpz_sub(r, r, B3);
     mpz_fdiv_q(r, r, rsa.N);
 
@@ -215,39 +195,32 @@ void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
     mpz_add_ui(comparison, r, 1);
     mpz_mul(comparison, comparison, rsa.N);
     mpz_add(comparison, comparison, B2);
-    mpz_cdiv_q(comparison, comparison, *b);
+    mpz_cdiv_q(comparison, comparison, b);
 
-    if (mpz_cmp(*s, comparison) >= 0) {
-      mpz_powm(c_prime, *s, rsa.E, rsa.N);
-      mpz_mul(c_prime, c_prime, *c);
+    if (mpz_cmp(s, comparison) >= 0) {
+      mpz_powm(c_prime, s, rsa.E, rsa.N);
+      mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
-      if (oracle(&c_prime, &rsa)) {
-        mpz_clear(r);
-        mpz_clear(comparison);
-        mpz_clear(c_prime);
+      if (oracle(c_prime, &rsa)) {
+        mpz_clears(r, c_prime, comparison, NULL);
         return;
       }
-      mpz_add_ui(*s, *s, 1);
+      mpz_add_ui(s, s, 1);
     } else {
-      mpz_set(*s, comparison);
+      mpz_set(s, comparison);
     }
   }
-  mpz_clear(r);
-  mpz_clear(comparison);
-  mpz_clear(c_prime);
+  mpz_clears(r, c_prime, comparison, NULL);
 }
 
-int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
+int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
   mpz_t a, b, r, r1, r2, c_prime;
-  mpz_init(r1);
-  mpz_init(r2);
-  mpz_init(r);
-  mpz_init(c_prime);
+  mpz_inits(r1, r2, r, c_prime, NULL);
 
   mpz_init_set(a, interval[0].lower);
   mpz_init_set(b, interval[0].upper);
 
-  mpz_mul(r, b, *s);
+  mpz_mul(r, b, s);
   mpz_sub(r, r, B2);
   mpz_mul_ui(r, r, 2);
   mpz_cdiv_q(r, r, rsa.N);
@@ -267,17 +240,12 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
     mpz_cdiv_q(r2, r2, a);
     mpz_add_ui(r2, r2, 1);
 
-    for (mpz_set(*s, r1); mpz_cmp(*s, r2) <= 0; mpz_add_ui(*s, *s, 1)) {
-      mpz_powm(c_prime, *s, rsa.E, rsa.N);
-      mpz_mul(c_prime, c_prime, *c);
+    for (mpz_set(s, r1); mpz_cmp(s, r2) <= 0; mpz_add_ui(s, s, 1)) {
+      mpz_powm(c_prime, s, rsa.E, rsa.N);
+      mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
-      if (oracle(&c_prime, &rsa)) {
-        mpz_clear(a);
-        mpz_clear(b);
-        mpz_clear(r);
-        mpz_clear(r1);
-        mpz_clear(r2);
-        mpz_clear(c_prime);
+      if (oracle(c_prime, &rsa)) {
+        mpz_clears(a, b, r, r1, r2, c_prime, NULL);
         return 1;
       }
     }
@@ -285,16 +253,11 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_t *c, mpz_t *s) {
   }
 
   // free gmp structs
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(r);
-  mpz_clear(r1);
-  mpz_clear(r2);
-  mpz_clear(c_prime);
+  mpz_clears(a, b, r, r1, r2, c_prime, NULL);
   return 0;
 }
 
-void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
+void findNextS_multipleIntervals(IntervalSet *set, mpz_ptr c, mpz_ptr s) {
   for (size_t j = 0; j < set->size; j++) {
     int result = searchingWithOneIntervalLeft(&set->intervals[j], c, s);
     if (result)
@@ -302,15 +265,9 @@ void findNextS_multipleIntervals(IntervalSet *set, mpz_t *c, mpz_t *s) {
   }
 }
 
-void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
+void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
   mpz_t a, b, r, r1, r2, aa, bb;
-  mpz_init(a);
-  mpz_init(b);
-  mpz_init(r);
-  mpz_init(r1);
-  mpz_init(r2);
-  mpz_init(aa);
-  mpz_init(bb);
+  mpz_inits(a, b, r, r1, r2, aa, bb, NULL);
 
   Interval interval;
   IntervalSet set;
@@ -323,14 +280,14 @@ void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
 
     // r1 = (as - 3B + 1) / n
     // r1 = ceil((a * s - B3 + 1), N)
-    mpz_mul(r1, a, *s);
+    mpz_mul(r1, a, s);
     mpz_sub(r1, r1, B3);
     mpz_add_ui(r1, r1, 1);
     mpz_cdiv_q(r1, r1, rsa.N);
 
     // r2 = (bs - 2B) / n
     // r2 = floor((b * s - B2), N) + 1
-    mpz_mul(r2, b, *s);
+    mpz_mul(r2, b, s);
     mpz_sub(r2, r2, B2);
     mpz_fdiv_q(r2, r2, rsa.N);
     mpz_add_ui(r2, r2, 1);
@@ -339,13 +296,13 @@ void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
       // aa = ceil(B2 + r*N, s)
       mpz_mul(aa, r, rsa.N);
       mpz_add(aa, aa, B2);
-      mpz_cdiv_q(aa, aa, *s);
+      mpz_cdiv_q(aa, aa, s);
 
       // bb = floor(B3 - 1 + r*N, s)
       mpz_mul(bb, r, rsa.N);
       mpz_add(bb, bb, B3);
       mpz_sub_ui(bb, bb, 1);
-      mpz_fdiv_q(bb, bb, *s);
+      mpz_fdiv_q(bb, bb, s);
 
       if (mpz_cmp(aa, a) > 0) {
         mpz_set(a, aa);
@@ -364,22 +321,17 @@ void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
   *priorSet = set;
 
   // free gmp structs
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(r);
-  mpz_clear(r1);
-  mpz_clear(r2);
-  mpz_clear(aa);
-  mpz_clear(bb);
+  mpz_clears(a, b, r, r1, r2, aa, bb, NULL);
 }
 
-void baseAttack(mpz_t *c) {
+void baseAttack(mpz_ptr c) {
   // ListOfIntervals = [(2B, 3B - 1)]
   mpz_t s, a, b;
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
   mpz_sub_ui(b, b, 1);
-  mpz_init_set_ui(s, 1);
+  mpz_init2(s, 1024);
+  mpz_set_ui(s, 1);
 
   mpz_div(s, rsa.N, B3);
 
@@ -396,16 +348,16 @@ void baseAttack(mpz_t *c) {
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
   start_time_2 = clock();
-  findNextS_iteratively(c, &s, &a, &b);
+  findNextS_iteratively(c, s, a, b);
   end_time_2 = clock();
-  findNewIntervals(&set, &s);
+  findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
-      findNextS_iteratively(c, &s, &a, &b);
+      findNextS_iteratively(c, s, a, b);
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
         prepareOutput(depadded_output_char, decrypted_input_char);
         printf("Decrypted message: ");
         printf("%s", depadded_output_char);
@@ -413,10 +365,10 @@ void baseAttack(mpz_t *c) {
             "===============================================================");
         break;
       }
-      searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+      searchingWithOneIntervalLeft(&set.intervals[0], c, s);
       times2c++;
     }
-    findNewIntervals(&set, &s);
+    findNewIntervals(&set, s);
 
     if (set.size == 0) {
       printf("No solution found\n");
@@ -438,19 +390,19 @@ void baseAttack(mpz_t *c) {
   free_interval_set(&set);
 }
 
-void trimmersOnly(mpz_t *c) {
+void trimmersOnly(mpz_ptr c) {
   // ListOfIntervals = [(2B, 3B - 1)]
   oracleCalls = 0;
   mpz_t s, a, b, t, ul, uh;
-  mpz_init(t);
-  mpz_init(ul);
-  mpz_init(uh);
+  mpz_init_set_ui(t, 1);
+  mpz_init_set_ui(ul, 1);
+  mpz_init_set_ui(uh, 1);
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
   mpz_sub_ui(b, b, 1);
   mpz_init_set_ui(s, 1);
 
-  trimming(&t, &ul, &uh, c, &rsa);
+  trimming(t, ul, uh, c, &rsa);
 
   mpz_mul(a, a, t);
   mpz_div(a, a, ul);
@@ -474,16 +426,16 @@ void trimmersOnly(mpz_t *c) {
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
   start_time_2 = clock();
-  findNextS_iteratively(c, &s, &a, &b);
+  findNextS_iteratively(c, s, a, b);
   end_time_2 = clock();
-  findNewIntervals(&set, &s);
+  findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
-      findNextS_iteratively(c, &s, &a, &b);
+      findNextS_iteratively(c, s, a, b);
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
         prepareOutput(depadded_output_char, decrypted_input_char);
         printf("Decrypted message: ");
         printf("%s", depadded_output_char);
@@ -491,10 +443,10 @@ void trimmersOnly(mpz_t *c) {
             "===============================================================");
         break;
       }
-      searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+      searchingWithOneIntervalLeft(&set.intervals[0], c, s);
       times2c++;
     }
-    findNewIntervals(&set, &s);
+    findNewIntervals(&set, s);
 
     if (set.size == 0) {
       printf("No solution found\n");
@@ -519,7 +471,7 @@ void trimmersOnly(mpz_t *c) {
   free_interval_set(&set);
 }
 
-void optimizedWithoutTrimmers(mpz_t *c) {
+void optimizedWithoutTrimmers(mpz_ptr c) {
   oracleCalls = 0;
 
   // ListOfIntervals = [(2B, 3B - 1)]
@@ -544,16 +496,16 @@ void optimizedWithoutTrimmers(mpz_t *c) {
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
   start_time_2 = clock();
-  findNextS_2a(c, &s, &a, &b);
+  findNextS_2a(c, s, a, b);
   end_time_2 = clock();
-  findNewIntervals(&set, &s);
+  findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
-      findNextS_multipleIntervals(&set, c, &s);
+      findNextS_multipleIntervals(&set, c, s);
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
         prepareOutput(depadded_output_char, decrypted_input_char);
         printf("Decrypted message: ");
         printf("%s", depadded_output_char);
@@ -561,10 +513,10 @@ void optimizedWithoutTrimmers(mpz_t *c) {
             "===============================================================");
         break;
       }
-      searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+      searchingWithOneIntervalLeft(&set.intervals[0], c, s);
       times2c++;
     }
-    findNewIntervals(&set, &s);
+    findNewIntervals(&set, s);
 
     if (set.size == 0) {
       printf("No solution found\n");
@@ -586,19 +538,20 @@ void optimizedWithoutTrimmers(mpz_t *c) {
   free_interval_set(&set);
 }
 
-void fullyOptimizedAttack(mpz_t *c) {
+void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
   oracleCalls = 0;
   // ListOfIntervals = [(2B, 3B - 1)]
   mpz_t s, a, b, t, ul, uh;
-  mpz_init(t);
-  mpz_init(ul);
-  mpz_init(uh);
+  mpz_init_set_ui(t, 1);
+  mpz_init_set_ui(ul, 1);
+  mpz_init_set_ui(uh, 1);
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
   mpz_sub_ui(b, b, 1);
-  mpz_init_set_ui(s, 1);
+  mpz_init2(s, 1024);
+  mpz_set_ui(s, 1);
 
-  trimming(&t, &ul, &uh, c, &rsa);
+  trimming(t, ul, uh, c, &rsa);
 
   mpz_mul(a, a, t);
   mpz_div(a, a, ul);
@@ -619,27 +572,27 @@ void fullyOptimizedAttack(mpz_t *c) {
   printf("----------- Starting the Attack ------------\n");
   start_time = clock();
   start_time_2 = clock();
-  findNextS_2a(c, &s, &a, &b);
+  findNextS_2a(c, s, a, b);
   end_time_2 = clock();
-  findNewIntervals(&set, &s);
+  findNewIntervals(&set, s);
   while (1) {
     if (set.size > 1) {
-      findNextS_multipleIntervals(&set, c, &s);
+      findNextS_multipleIntervals(&set, c, s);
       times2b++;
     } else {
       if (mpz_cmp(set.intervals[0].lower, set.intervals[0].upper) == 0) {
-        mpz_to_hex_array(decrypted_input_char, &set.intervals[0].lower);
+        mpz_to_hex_array(decrypted_input_char, set.intervals[0].lower);
         prepareOutput(depadded_output_char, decrypted_input_char);
         printf("Decrypted message: ");
-        printf("%s", depadded_output_char);
+        printf("%s\n", depadded_output_char);
         print(
             "===============================================================");
         break;
       }
-      searchingWithOneIntervalLeft(&set.intervals[0], c, &s);
+      searchingWithOneIntervalLeft(&set.intervals[0], c, s);
       times2c++;
     }
-    findNewIntervals(&set, &s);
+    findNewIntervals(&set, s);
 
     if (set.size == 0) {
       printf("No solution found\n");
@@ -655,11 +608,9 @@ void fullyOptimizedAttack(mpz_t *c) {
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
-  mpz_clear(a);
-  mpz_clear(b);
-  mpz_clear(s);
-  mpz_clear(t);
-  mpz_clear(uh);
-  mpz_clear(ul);
+  *calls = oracleCalls;
+  *time = cpu_time_used;
+
+  mpz_clears(a, b, s, t, uh, ul, NULL);
   free_interval_set(&set);
 }

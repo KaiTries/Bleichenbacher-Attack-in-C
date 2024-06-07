@@ -1,4 +1,5 @@
 #include "rsa.h"
+#include "gmp.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -53,12 +54,12 @@ int prepareOutput(char *output, char *input) {
   return 0;
 }
 
-void encrypt(mpz_t *output, mpz_t *input, RSA *rsa) {
-  mpz_powm(*output, *input, rsa->E, rsa->N);
+void encrypt(mpz_ptr output, mpz_ptr input, RSA *rsa) {
+  mpz_powm(output, input, rsa->E, rsa->N);
 }
 
-void decrypt(mpz_t *output, mpz_t *input, RSA *rsa) {
-  mpz_powm(*output, *input, rsa->D, rsa->N);
+void decrypt(mpz_ptr output, mpz_ptr input, RSA *rsa) {
+  mpz_powm(output, input, rsa->D, rsa->N);
 }
 
 void generate(RSA *rsa) {
@@ -124,8 +125,8 @@ void generate(RSA *rsa) {
   mpz_clear(test);
 }
 
-void mpz_to_hex_array(char *hex_string, mpz_t *number) {
-  mpz_get_str(hex_string, 16, *number);
+void mpz_to_hex_array(char *hex_string, mpz_ptr number) {
+  mpz_get_str(hex_string, 16, number);
   int len = strlen(hex_string);
   if (len < RSA_BLOCK_BYTE_SIZE * 2) {
     int dif = RSA_BLOCK_BYTE_SIZE * 2 - len;
@@ -138,11 +139,11 @@ void mpz_to_hex_array(char *hex_string, mpz_t *number) {
   }
 }
 
-int oracle(mpz_t *number, RSA *rsa) {
+int oracle(mpz_ptr number, RSA *rsa) {
   mpz_t decrypted_input;
   mpz_init(decrypted_input);
-  decrypt(&decrypted_input, number, rsa);
-  mpz_to_hex_array(oracleString, &decrypted_input);
+  decrypt(decrypted_input, number, rsa);
+  mpz_to_hex_array(oracleString, decrypted_input);
   oracleCalls++;
   mpz_clear(decrypted_input);
   if (oracleString[0] != '0' || oracleString[1] != '0')

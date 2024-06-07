@@ -20,16 +20,16 @@ int prepareInput(char *output, char *input);
 int prepareOutput(char *output, char *input);
 
 // encrypts input with the given RSA key
-void encrypt(mpz_t *output, mpz_t *input, RSA *rsa);
+void encrypt(mpz_ptr output, mpz_ptr input, RSA *rsa);
 
 // decrypts input with the given RSA key
-void decrypt(mpz_t *output, mpz_t *input, RSA *rsa);
+void decrypt(mpz_ptr output, mpz_ptr input, RSA *rsa);
 
 // creates an RSA key
 void generate(RSA *rsa);
 
 // turns an mpz integer into its hex string representations
-void mpz_to_hex_array(char *hex_string, mpz_t *number);
+void mpz_to_hex_array(char *hex_string, mpz_ptr number);
 
 // returns 1 if the given number is PKCS conforming
-int oracle(mpz_t *number, RSA *rsa);
+int oracle(mpz_ptr number, RSA *rsa);
