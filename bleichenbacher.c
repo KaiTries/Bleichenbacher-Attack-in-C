@@ -134,7 +134,7 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   double u_lower = 1;
   double u_upper = 1;
 
-  printf("max_u_lower: %f - min_u: %f\n", max_u_lower, min_u);
+  // printf("max_u_lower: %f - min_u: %f\n", max_u_lower, min_u);
   // binary search for upper and lower u
   while (max_u_lower - min_u > 1) {
     u = (max_u_lower + min_u) / 2;
@@ -147,11 +147,11 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   }
   u_lower = max_u_lower;
 
-  printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
+  // printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
 
   while (min_u_upper + 1 < max_u) {
     u = (min_u_upper + max_u) / 2;
-    printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
+    // printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
 
     counter++;
     if (test2(u, denom, c, rsa)) {
@@ -162,7 +162,7 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   }
   u_upper = min_u_upper;
 
-  printf("t: %f - ul: %f - uh: %f\n",denom, u_lower, u_upper);
+  // printf("t: %f - ul: %f - uh: %f\n",denom, u_lower, u_upper);
 
   mpz_set_ui(t_prime, denom);
   mpz_set_ui(ul, u_lower);
