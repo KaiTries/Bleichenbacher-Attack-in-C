@@ -4,13 +4,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-clock_t start_time, end_time, start_time_2, end_time_2;
-double cpu_time_used, cpu_time_used_2;
 char user_input[RSA_BLOCK_BYTE_SIZE];
 char user_input_hex[RSA_BLOCK_BYTE_SIZE * 2];
 char pkcs_padded_input[RSA_BLOCK_BYTE_SIZE * 2];
 char encrypted_input[RSA_BLOCK_BYTE_SIZE * 2];
-char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
 
 void runXTimes(int version, int x, mpz_ptr c, mpz_ptr m);
 
@@ -25,8 +22,8 @@ void get_user_input(mpz_ptr m) {
 }
 
 void set_current_c(int i, mpz_ptr c, mpz_ptr m) {
-  snprintf(user_input, sizeof(user_input), "%s%d%s%ld", "MessageNumber: ", i,
-           " adding randomness: ", random());
+  snprintf(user_input, sizeof(user_input), "%s%d%s%d", "MessageNumber: ", i,
+           " adding randomness: ", rand());
   prepareInput(pkcs_padded_input, user_input);
   mpz_set_str(m, pkcs_padded_input, 16);
   encrypt(c, m, &rsa);
@@ -57,12 +54,12 @@ int main() {
   return 0;
 }
 
-void runXTimes(int version, int x, mpz_ptr c, mpz_ptr m) {
+void runXTimes(int version, const int x, mpz_ptr c, mpz_ptr m) {
   int calls;
   double time;
 
-  int callsArr[x];
-  double timeArr[x];
+  int* callsArr = malloc(x * sizeof(int));
+  double* timeArr = malloc(x * sizeof(double));
 
   for (int i = 0; i < x; i++) {
     printf("iteration: %d\n", i);
@@ -99,4 +96,7 @@ void runXTimes(int version, int x, mpz_ptr c, mpz_ptr m) {
 
   printf("Average number of oracle calls: %d\n", avgCalls);
   printf("Average time spent decrypting: %f\n", avgTime);
+
+  free(callsArr);
+  free(timeArr);
 }

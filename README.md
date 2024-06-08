@@ -183,3 +183,24 @@ After building you can execute the script with:
 ```bash
 ./a.out
 ```
+
+### Windows
+To run it on windows you need cmake installed. As a build tool i use ninja
+
+Create build dir
+```bash
+mkdir build
+cd build
+```
+
+Build project
+```bash
+cmake -G Ninja ..
+```
+
+Make executable
+```bash
+cmake --build . --target main
+```
+
+Go into the build folder and execute the main.exe

@@ -44,7 +44,11 @@ int prepareOutput(char *output, char *input) {
   // Copy the rest of the input to the output
   int j = 0;
   while (input[i * 2] != '\0' && input[i * 2 + 1] != '\0') {
-    sscanf(&input[i * 2], "%02hhx", &output[j]);
+    #ifdef _MSC_VER
+      sscanf_s(&input[i * 2], "%02hhx", &output[j]);
+    #else
+      sscanf(&input[i * 2], "%02hhx", &output[j]);
+    #endif
     i++;
     j++;
   }
