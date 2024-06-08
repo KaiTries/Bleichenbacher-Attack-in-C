@@ -2,7 +2,6 @@
 #include "gmp.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 char user_input[RSA_BLOCK_BYTE_SIZE];
 char user_input_hex[RSA_BLOCK_BYTE_SIZE * 2];
@@ -58,8 +57,8 @@ void runXTimes(int version, const int x, mpz_ptr c, mpz_ptr m) {
   int calls;
   double time;
 
-  int* callsArr = malloc(x * sizeof(int));
-  double* timeArr = malloc(x * sizeof(double));
+  int *callsArr = malloc(x * sizeof(int));
+  double *timeArr = malloc(x * sizeof(double));
 
   for (int i = 0; i < x; i++) {
     printf("iteration: %d\n", i);
