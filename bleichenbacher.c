@@ -82,6 +82,8 @@ int lcm(double *a, int length) {
 }
 
 int in_range(double u, double t) {
+  if (t == u)
+    return 0;
   double lower_bound = 2 / 3.0;
   double upper_bound = 3 / 2.0;
   double num = u / t;
@@ -92,10 +94,8 @@ int in_range(double u, double t) {
 
 void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   int counter = 0;
-  double us[500] = {0};
-  us[0] = 1;
-  double ts[500] = {0};
-  ts[0] = 1;
+  double us[500] = {1};
+  double ts[500] = {1};
   int idx = 1;
 
   double t, u;
