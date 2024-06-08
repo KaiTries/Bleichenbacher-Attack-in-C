@@ -21,7 +21,7 @@ void get_user_input(mpz_ptr m) {
 }
 
 void set_current_c(int i, mpz_ptr c, mpz_ptr m) {
-  snprintf(user_input, sizeof(user_input), "%s%d%s%d", "MessageNumber: ", i,
+  snprintf(user_input, sizeof(user_input), "%s%d%s%d", "Number: ", i,
            " adding randomness: ", rand());
   prepareInput(pkcs_padded_input, user_input);
   mpz_set_str(m, pkcs_padded_input, 16);
