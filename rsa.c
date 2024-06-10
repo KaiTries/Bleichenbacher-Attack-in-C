@@ -11,6 +11,8 @@ char Q[] = "1051546063962684970998490207444679059906754679886840070777851619005"
            "5079520038452945216601553837352784786191461977224566643334966876410"
            "080204134569391652071";
 
+mpz_t decrypted_input;
+
 char oracleString[RSA_BLOCK_BYTE_SIZE * 2];
 
 int oracleCalls = 0;
@@ -118,6 +120,10 @@ void generate(RSA *rsa) {
     printf("Error with d and e\n");
     exit(1);
   }
+
+  // once RSA generated also setup oracle
+  mpz_init2(decrypted_input, 1024);
+
   mpz_clear(p);
   mpz_clear(q);
   mpz_clear(e);
@@ -145,16 +151,10 @@ void mpz_to_hex_array(char *hex_string, mpz_ptr number) {
 
 int oracle(mpz_ptr number, RSA *rsa, mpz_ptr B2, mpz_ptr B3) {
   oracleCalls++;
-  mpz_t decrypted_input;
-  mpz_init(decrypted_input);
   decrypt(decrypted_input, number, rsa);
   // Simple oracle that only checks if 00 02
-  if (mpz_cmp(B3, decrypted_input) <= 0)
-    return 0;
-  if (mpz_cmp(B2, decrypted_input) > 0)
-    return 0;
-
-  return 1;
+  int outOfRange = (mpz_cmp(B3, decrypted_input) < 0) | (mpz_cmp(B2, decrypted_input) >= 0);
+  return !outOfRange;
 
   /*
   mpz_to_hex_array(oracleString, decrypted_input);
