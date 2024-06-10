@@ -39,8 +39,8 @@ int main() {
   // get_user_input(&m);
 
   encrypt(c, m, &rsa);
-
-  runXTimes(3, 100, c, m);
+  // 0 - base, 1 - trimmersonly, 2 - step 2 no trim, 3 - full optim
+  runXTimes(0, 100, c, m);
 
   // optimizedWithoutTrimmers(&c);
 
@@ -65,13 +65,13 @@ void runXTimes(int version, const int x, mpz_ptr c, mpz_ptr m) {
     set_current_c(i, c, m);
     switch (version) {
     case 0:
-      // baseAttack(c);
+      baseAttack(c, &calls, &time);
       break;
     case 1:
-      // trimmersOnly(c);
+      trimmersOnly(c, &calls, &time);
       break;
     case 2:
-      // optimizedWithoutTrimmers(c);
+      optimizedWithoutTrimmers(c, &calls, &time);
       break;
     case 3:
       fullyOptimizedAttack(c, &calls, &time);

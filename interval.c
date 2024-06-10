@@ -62,18 +62,25 @@ int reunion(Interval *res, Interval *a, Interval *b) {
 }
 
 int in(Interval *interval, mpz_t val) {
-  if (mpz_cmp(interval->lower, val) > 0)
-    return 0;
-  if (mpz_cmp(interval->upper, val) < 0)
-    return 0;
-  return 1;
+  int out =
+      (mpz_cmp(interval->lower, val) > 0) | (mpz_cmp(interval->upper, val));
+  return !out;
+  // if (mpz_cmp(interval->lower, val) > 0)
+  //    return 0;
+  // if (mpz_cmp(interval->upper, val) < 0)
+  //   return 0;
+  // return 1;
 }
 
 int overlap(Interval *a, Interval *b) {
-  if (!in(a, b->lower) && !in(a, b->upper) && !in(b, a->lower) &&
-      !in(b, a->upper))
-    return 0;
-  return 1;
+  int noOverlap =
+      (mpz_cmp(a->upper, b->lower) < 0) | (mpz_cmp(b->upper, a->lower) < 0);
+  return !noOverlap;
+
+  // if (!in(a, b->lower) && !in(a, b->upper) && !in(b, a->lower) &&
+  //     !in(b, a->upper))
+  // return 0;
+  //  return 1;
 }
 
 void print_interval(Interval interval) {

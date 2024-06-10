@@ -164,6 +164,17 @@ void findNextS_2a() {
     }
 }
 ```
+
+## Results
+Test result have been obtained by letting the attack run 100 times for each configuration.
+
+|                             | Base Attack | Trimming   | Smarter way to find first s | Fully optimized |
+|-----------------------------|-------------|------------|-----------------------------|-----------------|
+| Average Oracle Queries      |     30      |    33      |             44              |       44        |
+| Average run time            |     30      |    33      |             44              |       44        |
+| Average time to find first s|     30      |    33      |             44              |       44        |
+
+
 ## How to use
 Simply clone the repository and follow the steps below to try it out yourself!
 

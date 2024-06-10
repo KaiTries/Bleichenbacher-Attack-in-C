@@ -2,9 +2,9 @@
 #include "gmp.h"
 #include "interval.h"
 #include "rsa.h"
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
-#include <math.h>
 
 #define TRIMMER_LIMIT 500
 
@@ -77,11 +77,13 @@ int test2(int u_int, int t_int, mpz_ptr c, RSA *rsa) {
 
 unsigned long int lcm(unsigned long int *a, int length) {
   mpz_t lcm;
-  mpz_init_set_ui(lcm,a[0]);
+  mpz_init_set_ui(lcm, a[0]);
   for (int i = 1; i < length; i++) {
     mpz_lcm_ui(lcm, lcm, a[i]);
   }
-  return mpz_get_ui(lcm);
+  unsigned long int r = mpz_get_ui(lcm);
+  mpz_clear(lcm);
+  return r;
 }
 
 int in_range(double u, double t) {
@@ -89,7 +91,7 @@ int in_range(double u, double t) {
     return 0;
   double lower_bound = 2 / 3.0;
   double upper_bound = 3 / 2.0;
-  double num = u / (double) t;
+  double num = u / (double)t;
   if (lower_bound < num && num < upper_bound)
     return 1;
   return 0;
@@ -97,8 +99,8 @@ int in_range(double u, double t) {
 
 void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   int counter = 0;
-  double us[500] = {1};
-  double ts[500] = {1};
+  unsigned long int us[500] = {1};
+  unsigned long int ts[500] = {1};
   int idx = 1;
 
   unsigned long int t, u;
@@ -229,7 +231,7 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
 }
 
 int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
-  mpz_t  r, r1, r2, c_prime;
+  mpz_t r, r1, r2, c_prime;
   mpz_init2(r, 1024);
   mpz_inits(r1, r2, c_prime, NULL);
 
@@ -259,7 +261,7 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
       mpz_mod(c_prime, c_prime, rsa.N);
       counter2c++;
       if (oracle(c_prime, &rsa, B2, B3)) {
-        mpz_clears( r, r1, r2, c_prime, NULL);
+        mpz_clears(r, r1, r2, c_prime, NULL);
         return 1;
       }
     }
@@ -267,7 +269,7 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
   }
 
   // free gmp structs
-  mpz_clears( r, r1, r2, c_prime, NULL);
+  mpz_clears(r, r1, r2, c_prime, NULL);
   return 0;
 }
 
@@ -308,8 +310,8 @@ void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
     mpz_add_ui(r2, r2, 1);
 
     for (mpz_set(r, r1); mpz_cmp(r, r2) <= 0; mpz_add_ui(r, r, 1)) {
-      // a = max(a, min((2B + r * n) / s, b))
-      // b = min(b, max((B3 - 1 + r * n) / s, a))
+      // a = max(a, min(ceil((2B + r * n), s), b))
+      // b = min(b, max(floor((B3 - 1 + r * n), s), a))
       mpz_mul(aa, r, rsa.N);
       mpz_add(aa, aa, B2);
       mpz_cdiv_q(aa, aa, s);
@@ -332,10 +334,8 @@ void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
         mpz_set(b, bb);
       }
 
-      if (mpz_cmp(a, b) <= 0) {
-        set_interval(&interval, a, b);
-        add_interval(&set, &interval);
-      }
+      set_interval(&interval, a, b);
+      add_interval(&set, &interval);
     }
   }
   free_interval_set(priorSet);
@@ -345,8 +345,9 @@ void findNewIntervals(IntervalSet *priorSet, mpz_ptr s) {
   mpz_clears(a, b, r, r1, r2, aa, bb, NULL);
 }
 
-void baseAttack(mpz_ptr c) {
+void baseAttack(mpz_ptr c, int *calls, double *time) {
   // ListOfIntervals = [(2B, 3B - 1)]
+  oracleCalls = 0;
   mpz_t s, a, b;
   mpz_init_set(a, B2);
   mpz_init_set(b, B3);
@@ -407,11 +408,13 @@ void baseAttack(mpz_ptr c) {
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
+  *calls = oracleCalls;
+  *time = cpu_time_used;
   mpz_clears(a, b, s);
   free_interval_set(&set);
 }
 
-void trimmersOnly(mpz_ptr c) {
+void trimmersOnly(mpz_ptr c, int *calls, double *time) {
   // ListOfIntervals = [(2B, 3B - 1)]
   oracleCalls = 0;
   mpz_t s, a, b, t, ul, uh;
@@ -477,11 +480,13 @@ void trimmersOnly(mpz_ptr c) {
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
+  *calls = oracleCalls;
+  *time = cpu_time_used;
   mpz_clears(a, b, s, t, uh, ul);
   free_interval_set(&set);
 }
 
-void optimizedWithoutTrimmers(mpz_ptr c) {
+void optimizedWithoutTrimmers(mpz_ptr c, int *calls, double *time) {
   oracleCalls = 0;
 
   mpz_t s, a, b;
@@ -534,6 +539,8 @@ void optimizedWithoutTrimmers(mpz_ptr c) {
   printf("Execution time: %f seconds\n", cpu_time_used);
   printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
+  *calls = oracleCalls;
+  *time = cpu_time_used;
   mpz_clears(a, b, s);
   free_interval_set(&set);
 }
@@ -637,7 +644,6 @@ void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
          totalTimeOneInterval);
 
   printf("Total oracle calls from step2c: %d\n", counter2c);
-
 
   *calls = oracleCalls;
   *time = cpu_time_used;
