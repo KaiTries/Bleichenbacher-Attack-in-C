@@ -4,6 +4,7 @@
 #include "rsa.h"
 #include <stdio.h>
 #include <time.h>
+#include <math.h>
 
 #define TRIMMER_LIMIT 500
 
@@ -14,6 +15,7 @@ double cpu_time_used, cpu_time_used_2;
 RSA rsa;
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
 char depadded_output_char[RSA_BLOCK_BYTE_SIZE];
+int counter2c;
 
 void print(char *string) { printf("%s\n", string); }
 
@@ -73,38 +75,37 @@ int test2(int u_int, int t_int, mpz_ptr c, RSA *rsa) {
   return 0;
 }
 
-int lcm(double *a, int length) {
-  double lcm = a[0];
+unsigned long int lcm(unsigned long int *a, int length) {
+  mpz_t lcm;
+  mpz_init_set_ui(lcm,a[0]);
   for (int i = 1; i < length; i++) {
-    lcm = (lcm * a[i]) / gcd(lcm, a[i]);
+    mpz_lcm_ui(lcm, lcm, a[i]);
   }
-  return lcm;
+  return mpz_get_ui(lcm);
 }
 
-int in_range(double u, double t) {
+int in_range(unsigned long int u, unsigned long int t) {
   double lower_bound = 2 / 3.0;
   double upper_bound = 3 / 2.0;
-  double num = u / t;
-  if (lower_bound < num < upper_bound)
+  double num = u / (double) t;
+  if (lower_bound < num && num < upper_bound)
     return 1;
   return 0;
 }
 
 void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   int counter = 0;
-  double us[500] = {0};
+  unsigned long int us[500] = {0};
   us[0] = 1;
-  double ts[500] = {0};
+  unsigned long int ts[500] = {0};
   ts[0] = 1;
   int idx = 1;
 
-  double t, u;
+  unsigned long int t, u;
 
-  for (t = 3; t < 4097; t++) {
-    if (counter >= TRIMMER_LIMIT)
-      break;
-    for (u = t - 1; u < t + 2; u++) {
-      if (counter >= TRIMMER_LIMIT || !in_range(u, t))
+  for (t = 3; t < 4097 && counter < TRIMMER_LIMIT; t++) {
+    for (u = t - 1; u < t + 2 && counter < TRIMMER_LIMIT; u++) {
+      if (!in_range(u, t))
         break;
       if (test1(u, t) == 1) {
         counter++;
@@ -121,17 +122,17 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
     return;
   }
 
-  double denom = lcm(ts, idx);
+  unsigned long int denom = lcm(ts, idx);
 
   // 2t / 3 < u < 3t / 2
-  double min_u = (2 * denom) / 3.0;
-  double max_u = (3 * denom) / 2.0;
+  double min_u = floor((2 * denom) / 3.0);
+  double max_u = ceil((3 * denom) / 2.0);
 
   // max bound for u_lower is u_a / t_a
-  double max_u_lower = (us[0] / (double)ts[0]) * denom;
+  double max_u_lower = denom;
 
   // min bound for u_upper is u_b / t_b
-  double min_u_upper = (us[idx - 1] / (double)ts[idx - 1]) * denom;
+  double min_u_upper = denom;
 
   double u_lower = 1;
   double u_upper = 1;
@@ -139,7 +140,7 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   // printf("max_u_lower: %f - min_u: %f\n", max_u_lower, min_u);
   // binary search for upper and lower u
   while (max_u_lower - min_u > 1) {
-    u = (max_u_lower + min_u) / 2;
+    u = ceil((max_u_lower + min_u) / 2);
     counter++;
     if (test2(u, denom, c, rsa)) {
       max_u_lower = u;
@@ -152,9 +153,8 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   // printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
 
   while (min_u_upper + 1 < max_u) {
-    u = (min_u_upper + max_u) / 2;
+    u = floor((min_u_upper + max_u) / 2);
     // printf("min_u_upper: %f - max_u: %f\n", min_u_upper, max_u);
-
     counter++;
     if (test2(u, denom, c, rsa)) {
       min_u_upper = u;
@@ -164,8 +164,8 @@ void trimming(mpz_ptr t_prime, mpz_ptr ul, mpz_ptr uh, mpz_ptr c, RSA *rsa) {
   }
   u_upper = min_u_upper;
 
-  // printf("t: %f - ul: %f - uh: %f\n",denom, u_lower, u_upper);
-
+  printf("Oracle called from trimming function: %d\n", counter);
+  // printf("t: %lu - ul: %f - uh: %f\n",denom, u_lower, u_upper);
   mpz_set_ui(t_prime, denom);
   mpz_set_ui(ul, u_lower);
   mpz_set_ui(uh, u_upper);
@@ -194,6 +194,8 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
   mpz_init2(comparison, 1024);
   mpz_init2(c_prime, 1024);
 
+  int count = 0;
+
   mpz_add(s, rsa.N, B2);
   mpz_cdiv_q(s, s, b);
 
@@ -213,9 +215,10 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
       mpz_powm(c_prime, s, rsa.E, rsa.N);
       mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
+      count++;
       if (oracle(c_prime, &rsa, B2, B3)) {
-        mpz_clears(r, c_prime, comparison, NULL);
-        return;
+        printf("Oracle called from step 2a %d times\n", count);
+        break;
       }
       mpz_add_ui(s, s, 1);
     } else {
@@ -226,14 +229,11 @@ void findNextS_2a(mpz_srcptr c, mpz_ptr s, mpz_ptr a, mpz_ptr b) {
 }
 
 int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
-  mpz_t a, b, r, r1, r2, c_prime;
+  mpz_t  r, r1, r2, c_prime;
   mpz_init2(r, 1024);
   mpz_inits(r1, r2, c_prime, NULL);
 
-  mpz_init_set(a, interval[0].lower);
-  mpz_init_set(b, interval[0].upper);
-
-  mpz_mul(r, b, s);
+  mpz_mul(r, interval->upper, s);
   mpz_sub(r, r, B2);
   mpz_mul_ui(r, r, 2);
   mpz_cdiv_q(r, r, rsa.N);
@@ -243,22 +243,23 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
     // low_bound = ceil((B2 + r * N), b)
     mpz_mul(r1, r, rsa.N);
     mpz_add(r1, r1, B2);
-    mpz_cdiv_q(r1, r1, b);
+    mpz_cdiv_q(r1, r1, interval->upper);
 
     // right bound
     // high_bound = ceil((B3 - 1 + r * N),a) + 1
     mpz_mul(r2, r, rsa.N);
     mpz_add(r2, r2, B3);
     mpz_sub_ui(r2, r2, 1);
-    mpz_cdiv_q(r2, r2, a);
+    mpz_cdiv_q(r2, r2, interval->lower);
     mpz_add_ui(r2, r2, 1);
 
     for (mpz_set(s, r1); mpz_cmp(s, r2) <= 0; mpz_add_ui(s, s, 1)) {
       mpz_powm(c_prime, s, rsa.E, rsa.N);
       mpz_mul(c_prime, c_prime, c);
       mpz_mod(c_prime, c_prime, rsa.N);
+      counter2c++;
       if (oracle(c_prime, &rsa, B2, B3)) {
-        mpz_clears(a, b, r, r1, r2, c_prime, NULL);
+        mpz_clears( r, r1, r2, c_prime, NULL);
         return 1;
       }
     }
@@ -266,7 +267,7 @@ int searchingWithOneIntervalLeft(Interval *interval, mpz_srcptr c, mpz_ptr s) {
   }
 
   // free gmp structs
-  mpz_clears(a, b, r, r1, r2, c_prime, NULL);
+  mpz_clears( r, r1, r2, c_prime, NULL);
   return 0;
 }
 
@@ -549,6 +550,8 @@ void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
   mpz_init2(s, 1024);
   mpz_set_ui(s, 1);
 
+  counter2c = 0;
+
   trimming(t, ul, uh, c, &rsa);
 
   mpz_mul(a, a, t);
@@ -632,6 +635,9 @@ void fullyOptimizedAttack(mpz_ptr c, int *calls, double *time) {
          totalTimeMultipleIntervals);
   printf("Total time spent searching one interval: %f seconds\n",
          totalTimeOneInterval);
+
+  printf("Total oracle calls from step2c: %d\n", counter2c);
+
 
   *calls = oracleCalls;
   *time = cpu_time_used;

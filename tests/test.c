@@ -2,6 +2,7 @@
 #include "../bleichenbacher.h"
 #include <time.h>
 #include <stdio.h>
+#include <string.h>
 
 int inputToPaddedMessage(char *pkcs_padded_input, char *user_input) {
     sprintf(&pkcs_padded_input[0],"%02x", 0);
@@ -106,9 +107,9 @@ void rsa_tests() {
 
     inputToPaddedMessage(pkcs_padded_input, message);
     mpz_set_str(m, pkcs_padded_input, 16);
-    encrypt(&c,&m,&rsa);
-    decrypt(&decrypted_input,&c,&rsa);
-    mpz_to_hex_array(pkcs_decrypted_input,&decrypted_input);
+    encrypt(c,m,&rsa);
+    decrypt(decrypted_input,c,&rsa);
+    mpz_to_hex_array(pkcs_decrypted_input,decrypted_input);
 
     for(int i = 0; i < strlen(pkcs_decrypted_input); i++) {
         if (pkcs_padded_input[i] != pkcs_decrypted_input[i]) {
@@ -136,13 +137,13 @@ void oracle_tests() {
     inputToPaddedMessage(pkcs_padded_input, message);
     mpz_set_str(m, pkcs_padded_input, 16);
 
-    if (!oracle(&m, &rsa)) {
+    if (oracle(&m, &rsa, B2, B3)) {
         printf("oracle should be correct for original input");
     }
 
-    encrypt(&c,&m,&rsa);
+    encrypt(c,m,&rsa);
     for(int i = 0; i < 5; i++){    
-        findNextS_iteratively(&c, &s, &a, &b);
+        findNextS_iteratively(c, s, a, b);
         mpz_t validInput;
         mpz_init(validInput);
 
@@ -150,13 +151,13 @@ void oracle_tests() {
         mpz_mul(validInput,validInput,c);
         mpz_mod(validInput,validInput,rsa.N);
 
-        if (!oracle(&validInput, &rsa)) {
+        if (!oracle(&validInput, &rsa, B2, B3)) {
             printf("oracle should be correct for valid input");
         }
 
         mpz_mul(validInput,validInput,validInput);
         mpz_mod(validInput,validInput,rsa.N);
-        if (oracle(&validInput, &rsa)) {
+        if (oracle(&validInput, &rsa, B2, B3)) {
             printf("oracle should not be correct for invalid input");
         }
     }
