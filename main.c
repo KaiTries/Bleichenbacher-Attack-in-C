@@ -40,8 +40,18 @@ int main() {
 
     baseAttack(&c);
 
+
+    for (size_t i = 0; i < 10; i++)
+    {
+      fullyOptimizedAttack(&c);
+    }
+    
+
     mpz_clear(c);
     mpz_clear(m);
     return 0;
 }
+
+
+
 

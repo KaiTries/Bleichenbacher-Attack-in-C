@@ -1,0 +1,50 @@
+[
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/main.dir/main.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/main.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/main.c",
+  "output": "CMakeFiles/main.dir/main.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/main.dir/interval.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/interval.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/interval.c",
+  "output": "CMakeFiles/main.dir/interval.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/main.dir/bleichenbacher.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/bleichenbacher.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/bleichenbacher.c",
+  "output": "CMakeFiles/main.dir/bleichenbacher.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/main.dir/rsa.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/rsa.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/rsa.c",
+  "output": "CMakeFiles/main.dir/rsa.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/test_program.dir/interval.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/interval.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/interval.c",
+  "output": "CMakeFiles/test_program.dir/interval.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/test_program.dir/bleichenbacher.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/bleichenbacher.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/bleichenbacher.c",
+  "output": "CMakeFiles/test_program.dir/bleichenbacher.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/test_program.dir/rsa.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/rsa.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/rsa.c",
+  "output": "CMakeFiles/test_program.dir/rsa.c.o"
+},
+{
+  "directory": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/build",
+  "command": "/Library/Developer/CommandLineTools/usr/bin/cc -I/opt/homebrew/Cellar/gmp/6.3.0/include  -IC:/Users/Kai/Documents/GitHub/vcpkg/packages/gmp_x64-windows-static/include -g -arch arm64 -isysroot /Library/Developer/CommandLineTools/SDKs/MacOSX14.4.sdk -o CMakeFiles/test_program.dir/tests/test.c.o -c /Users/kaischultz/github/Bleichenbacher-Attack-in-C/tests/test.c",
+  "file": "/Users/kaischultz/github/Bleichenbacher-Attack-in-C/tests/test.c",
+  "output": "CMakeFiles/test_program.dir/tests/test.c.o"
+}
+]
