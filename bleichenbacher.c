@@ -2,6 +2,7 @@
 #include "interval.h"
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 #define TRIMMER_LIMIT 500
 
@@ -97,15 +98,15 @@ int in_range(int u, int t) {
     double lower_bound = 2 / 3.0;
     double upper_bound = 3 / 2.0;
     double num = u / (double) t;
-    if (lower_bound < num < upper_bound) return 1;
+    if (lower_bound < num  && num < upper_bound) return 1;
     return 0;
 }
 
 void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     int counter = 0;
-    int us[500];
-    int ts[500];
-    int idx = 0;
+    int ts[TRIMMER_LIMIT];
+    ts[0] = 1;
+    int idx = 1;
     
     int t = 1, u;
 
@@ -116,7 +117,6 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
             if (test1(u, t) == 1) {
                 counter++;
                 if (test2(u, t, c, rsa) == 1) {
-                    us[idx] = u;
                     ts[idx++] = t;
                     break;
                 }
@@ -124,7 +124,7 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
         }
     }
 
-    if (idx == 0) {
+    if (idx == 1) {
         mpz_set_ui(*t_prime, 1);
         mpz_set_ui(*ul, 1);
         mpz_set_ui(*uh, 1);
@@ -134,21 +134,21 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     int denom = lcm(ts,idx);
 
     // 2t / 3 < u < 3t / 2
-    double min_u = (2 * denom) / 3.0;
-    double max_u = (3 * denom) / 2.0;
+    int min_u = floor((2 * denom) / 3.0);
+    int max_u = ceil((3 * denom) / 2.0);
 
     // max bound for u_lower is u_a / t_a
-    double max_u_lower = (us[0] / (double) ts[0]) * denom;
+    int max_u_lower = denom;
 
     // min bound for u_upper is u_b / t_b
-    double min_u_upper = (us[idx - 1] / (double) ts[idx - 1]) * denom;
+    int min_u_upper = denom;
 
     int u_lower = 1;
     int u_upper = 1;
 
     // binary search for upper and lower u
     while(max_u_lower - min_u != 1) {
-        u = (max_u_lower + min_u) / 2;
+        u =  ceil((max_u_lower + min_u) / 2.0);
         counter++;
         if(test2(u, denom, c, rsa)) {
             max_u_lower = u;
@@ -159,7 +159,7 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     u_lower = max_u_lower;
 
     while(min_u_upper + 1 !=  max_u) {
-        u = (min_u_upper + max_u) / 2;
+        u = floor((min_u_upper + max_u) / 2.0);
         counter++;
         if(test2(u, denom, c, rsa)) {
             min_u_upper = u;
@@ -579,7 +579,7 @@ void optimizedWithoutTrimmers(mpz_t *c) {
     free_interval_set(&set);
 }
 
-void fullyOptimizedAttack(mpz_t *c) {
+void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     oracleCalls = 0;
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t s, a, b, t, ul, uh;
@@ -647,6 +647,10 @@ void fullyOptimizedAttack(mpz_t *c) {
     printf("Number of oracle calls: %d\n", oracleCalls);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
+
+    *calls += oracleCalls;
+    *s2aCalls += oracleCalls;
+    *rTime += cpu_time_used;
 
     mpz_clear(a);
     mpz_clear(b);

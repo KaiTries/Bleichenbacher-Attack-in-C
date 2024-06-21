@@ -20,4 +20,4 @@ void trimmersOnly(mpz_t *c);
 void optimizedWithoutTrimmers(mpz_t *c);
 
 // optimized bleichenbacher attack
-void fullyOptimizedAttack(mpz_t *c);
+void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime);
