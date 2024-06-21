@@ -8,7 +8,6 @@ Test result have been obtained by letting the attack run 100 times for each conf
 | Average Oracle Queries      |     26503   |   22847    |            17204            |       8445      |
 | Average queries for step2a  |     21054   |   19491    |             5843            |       1297      |
 | Average run time            |     6.38s   |    5.8s    |             3.59s           |       1.8s      |
-| Average time to find first s|     4.98s   |   4.37s    |             1.66s           |       <0.005s   |
 
 ## The Attack
 The Bleichenbacher attack or also called "million messages attack" was invented in 1998 by Daniel Bleichenbacher. It exploited a weakness in the PKCS #1 v1.5 protocol and is one of the most prominent attacks to date. Specifically the attack exploited the response messages that servers would give upon receiving a wrongly formatted message. The PKCS #1 v1.5 protocol states, that if the message received is incorrectly padded, it should return a distinct error code. This leakage of information was enough for Bleichenbacher to devise an algorithm that given any cyphertext c could find a message m that satisfies $ m = c^{d} \mod n $. The algorithm is roughly dividable into three distinct steps: initial setup & finding s iteratively, finding s with only one interval, and computing new intervals. This will go on until there is only one interval of size 1 left.
