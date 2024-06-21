@@ -54,7 +54,7 @@ int main() {
     for (size_t i = 0; i < iterations; i++)
     {
       set_current_c(i,&c,&m);
-      fullyOptimizedAttack(&c, &calls, &s2aCalls, &rTime);
+      baseAttack(&c, &calls, &s2aCalls, &rTime);
       printf("Original Message: %s", user_input_copy);
     }
 

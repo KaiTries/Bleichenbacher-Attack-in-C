@@ -12,6 +12,7 @@ double cpu_time_used, cpu_time_used_2;
 RSA rsa;
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
 char depadded_output_char[RSA_BLOCK_BYTE_SIZE];
+int calls2a;
 
 void print(char *string) {
     printf("%s\n",string);
@@ -86,15 +87,15 @@ int test2(int u_int, int t_int,mpz_t *c, RSA *rsa) {
     return 0;
 }
 
-int lcm(int *a, int length) {
-    int lcm = a[0];
+long lcm(long *a, int length) {
+    long lcm = a[0];
     for(int i = 1; i < length; i++) {
         lcm = (lcm * a[i]) / gcd(lcm, a[i]);
     }
     return lcm;
 }
 
-int in_range(int u, int t) {
+int in_range(long u, long t) {
     double lower_bound = 2 / 3.0;
     double upper_bound = 3 / 2.0;
     double num = u / (double) t;
@@ -104,11 +105,11 @@ int in_range(int u, int t) {
 
 void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
     int counter = 0;
-    int ts[TRIMMER_LIMIT];
+    long ts[TRIMMER_LIMIT];
     ts[0] = 1;
     int idx = 1;
     
-    int t = 1, u;
+    long t = 1, u;
 
     for (t = 3; t < 10000; t++) {
         if (counter >= TRIMMER_LIMIT) break;
@@ -131,20 +132,20 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
         return;
     }
 
-    int denom = lcm(ts,idx);
+    long denom = lcm(ts,idx);
 
     // 2t / 3 < u < 3t / 2
-    int min_u = floor((2 * denom) / 3.0);
-    int max_u = ceil((3 * denom) / 2.0);
+    long min_u = floor((2 * denom) / 3.0);
+    long max_u = ceil((3 * denom) / 2.0);
 
     // max bound for u_lower is u_a / t_a
-    int max_u_lower = denom;
+    long max_u_lower = denom;
 
     // min bound for u_upper is u_b / t_b
-    int min_u_upper = denom;
+    long min_u_upper = denom;
 
-    int u_lower = 1;
-    int u_upper = 1;
+    long u_lower = 1;
+    long u_upper = 1;
 
     // binary search for upper and lower u
     while(max_u_lower - min_u != 1) {
@@ -176,13 +177,13 @@ void trimming(mpz_t *t_prime, mpz_t *ul, mpz_t *uh, mpz_t *c, RSA *rsa) {
 
 void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
     mpz_t c_prime;
-    mpz_add_ui(*s,*s,1);
     mpz_init(c_prime);
 
     while(1) {
         mpz_powm(c_prime, *s, rsa.E, rsa.N);
         mpz_mul(c_prime, c_prime, *c);
         mpz_mod(c_prime, c_prime, rsa.N);
+        calls2a++;
         if (oracle(&c_prime, &rsa)) {
             mpz_clear(c_prime);
             return;
@@ -217,6 +218,7 @@ void findNextS_2a(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b) {
             mpz_powm(c_prime, *s, rsa.E, rsa.N);
             mpz_mul(c_prime, c_prime, *c);
             mpz_mod(c_prime, c_prime, rsa.N);
+            calls2a++;
             if (oracle(&c_prime, &rsa)) {
                 mpz_clear(r);
                 mpz_clear(comparison);
@@ -366,8 +368,10 @@ void findNewIntervals(IntervalSet *priorSet, mpz_t *s) {
     mpz_clear(bb);
 }
 
-void baseAttack(mpz_t *c) {
+void baseAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     // ListOfIntervals = [(2B, 3B - 1)]
+    oracleCalls = 0;
+    calls2a = 0;
     mpz_t s, a, b;
     mpz_init_set(a,B2);
     mpz_init_set(b,B3);
@@ -424,6 +428,10 @@ void baseAttack(mpz_t *c) {
     printf("Number of oracle calls: %d\n", oracleCalls);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
+    *calls += oracleCalls;
+    *s2aCalls += calls2a;
+    *rTime += cpu_time_used;
+
 
     mpz_clear(a);
     mpz_clear(b);
