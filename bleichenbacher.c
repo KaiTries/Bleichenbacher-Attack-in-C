@@ -426,6 +426,7 @@ void baseAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
     printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
     *calls += oracleCalls;

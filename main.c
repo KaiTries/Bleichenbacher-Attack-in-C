@@ -1,4 +1,5 @@
 #include "bleichenbacher.h"
+#include <gmp.h>
 #include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,23 @@ char user_input_hex[RSA_BLOCK_BYTE_SIZE * 2];
 char pkcs_padded_input[RSA_BLOCK_BYTE_SIZE * 2];
 char encrypted_input[RSA_BLOCK_BYTE_SIZE * 2];
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
+char *message;
 
+void PMS(gmp_randstate_ptr state) {
+  mpz_t a, b, f;
+  mpz_inits(a,b,f,NULL);
+
+  mpz_ui_pow_ui(a,16,95);
+  mpz_ui_pow_ui(b,16,96);
+  mpz_sub_ui(b,b,1);
+
+  mpz_urandomm(f,state,b);
+  mpz_add(f,f,a);
+
+  message = mpz_get_str(NULL, 16, f);
+
+  mpz_clears(a,b,f,NULL);
+}
 
 /**
  * Reads a line from standard input, pads the input using PKCS#1 v1.5 padding scheme, 
@@ -21,8 +38,9 @@ void get_user_input(mpz_t *m){
     prepareInput(pkcs_padded_input, user_input);
     mpz_set_str(*m, pkcs_padded_input, 16);
 }
-void set_current_c(int i, mpz_t *c, mpz_t *m) {
-  int written = snprintf(user_input, sizeof(user_input), "%s%d\n", "Number: ", i);
+void set_current_c(int i, mpz_t *c, mpz_t *m, gmp_randstate_ptr state) {
+  PMS(state);
+  int written = snprintf(user_input, sizeof(user_input), "%s\n", message);
   strcpy(user_input_copy, user_input);
   prepareInput(pkcs_padded_input, user_input_copy);
   mpz_set_str(*m, pkcs_padded_input, 16);
@@ -33,6 +51,8 @@ void set_current_c(int i, mpz_t *c, mpz_t *m) {
  */
 int main() {
     mpz_t m, c;
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
     mpz_init(m); mpz_init(c);
     setup();
     int iterations = 100;
@@ -47,14 +67,14 @@ int main() {
 
     // baseAttack(&c);
 
-    int calls;
-    int s2aCalls;
-    double rTime;
+    int calls = 0;
+    int s2aCalls = 0;
+    double rTime = 0;
 
     for (size_t i = 0; i < iterations; i++)
     {
-      set_current_c(i,&c,&m);
-      baseAttack(&c, &calls, &s2aCalls, &rTime);
+      set_current_c(i,&c,&m, state);
+      trimmersOnly(&c );
       printf("Original Message: %s", user_input_copy);
     }
 
