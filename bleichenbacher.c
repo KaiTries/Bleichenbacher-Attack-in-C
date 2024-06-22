@@ -18,11 +18,15 @@ void print(char *string) {
     printf("%s\n",string);
 }
 
-void setup() {
-    generate(&rsa);
-    mpz_init(B);  mpz_setbit(B, 8 * (RSA_BLOCK_BYTE_SIZE - 2));
-    mpz_init(B2); mpz_mul_ui(B2, B, 2);
-    mpz_init(B3); mpz_mul_ui(B3, B, 3);
+void initSetup() {
+    mpz_inits(rsa.D, rsa.E, rsa.N, B, B2, B3,NULL);
+}
+
+void setup(gmp_randstate_ptr state) {
+    generate(&rsa, state);
+    mpz_setbit(B, 8 * (RSA_BLOCK_BYTE_SIZE - 2));
+    mpz_mul_ui(B2, B, 2);
+    mpz_mul_ui(B3, B, 3);
 
     // assert that B is of correct length
     if (mpz_sizeinbase(B,2) / 8 != RSA_BLOCK_BYTE_SIZE - 2 

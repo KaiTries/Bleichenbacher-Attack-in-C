@@ -4,8 +4,9 @@
 extern mpz_t B, B2, B3;
 extern RSA rsa;
 
+void initSetup();
 // sets up environment for the attack
-void setup();
+void setup(gmp_randstate_ptr state);
 
 // base S search function
 void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b);

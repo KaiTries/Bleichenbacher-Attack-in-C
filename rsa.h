@@ -26,7 +26,7 @@ void encrypt(mpz_t *output, mpz_t *input, RSA *rsa);
 void decrypt(mpz_t *output, mpz_t *input, RSA *rsa);
 
 // creates an RSA key
-void generate(RSA *rsa);
+void generate(RSA *rsa, gmp_randstate_ptr state);
 
 // turns an mpz integer into its hex string representations
 void mpz_to_hex_array(char *hex_string, mpz_t *number);

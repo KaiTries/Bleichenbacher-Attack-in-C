@@ -54,9 +54,9 @@ int main() {
     gmp_randstate_t state;
     gmp_randinit_default(state);
     mpz_init(m); mpz_init(c);
-    setup();
     int iterations = 100;
     //get_user_input(&m);
+    initSetup();
 
     // encrypt(&c, &m, &rsa);
 
@@ -73,8 +73,9 @@ int main() {
 
     for (size_t i = 0; i < iterations; i++)
     {
+      setup(state);
       set_current_c(i,&c,&m, state);
-      trimmersOnly(&c );
+      baseAttack(&c,&calls, &s2aCalls, &rTime );
       printf("Original Message: %s", user_input_copy);
     }
 
