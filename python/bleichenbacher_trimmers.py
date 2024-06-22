@@ -170,10 +170,22 @@ def primes():
     y = random.randint(int(pow(2, 511.5)), int(2 ** 512))
     p = gmpy2.next_prime(x)
     q = gmpy2.next_prime(y)
-    n = p * q
-    phi = (p - 1) * (q - 1)
+    n = p * q 
     byte_length_n = (len(hex(n)) - 2) / 2
     k = int(byte_length_n)
+    while k != 128:
+        x = random.randint(int(pow(2, 511.5)), int(2 ** 512))
+        y = random.randint(int(pow(2, 511.5)), int(2 ** 512))
+        p = gmpy2.next_prime(x)
+        q = gmpy2.next_prime(y)
+        n = p * q 
+        byte_length_n = (len(hex(n)) - 2) / 2
+        k = int(byte_length_n)
+    
+
+    phi = (p - 1) * (q - 1)
+
+
     e = 65537
     d = find_inverse(e, phi)
 
@@ -419,12 +431,10 @@ def test(x):
         oracle2a.append(counter3)
         times.append(duration)
         u = u + 1
-        print("Overall Oracle Calls: Mean: {}, Median: {}".format(np.mean(Oracle_times), np.median(Oracle_times)))
-        print("Step 2a Oracle Calls: Mean: {}, Median: {}".format(np.mean(oracle2a), np.median(oracle2a)))
-        print("Overall time taken  : Mean: {}, Median: {}".format(np.mean(times), np.median(times)))
+        print("Overall Oracle Calls - Mean: {}, Median: {}".format(np.mean(Oracle_times), np.median(Oracle_times)))
+        print("Step 2a Oracle Calls - Mean: {}, Median: {}".format(np.mean(oracle2a), np.median(oracle2a)))
+        print("Overall time taken   - Mean: {}, Median: {}".format(np.mean(times), np.median(times)))
     print("{} seeds have entered step 2b".format(len(list2b)))
     print("The seeds that entered step 2b are {}".format(list2b))
-    print("The list of oracle trimmer calls is {}".format(trimmercount))
-    print("Maximum: {}, Mean: {}, Median: {}".format(max(trimmercount), np.mean(trimmercount), np.median(trimmercount)))
 
 test(100)

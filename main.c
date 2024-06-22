@@ -79,7 +79,7 @@ int main() {
     gmp_randstate_t state;
     gmp_randinit_default(state);
     mpz_init(m); mpz_init(c);
-    int iterations = 1000;
+    int iterations = 500;
     //get_user_input(&m);
     initSetup();
 
