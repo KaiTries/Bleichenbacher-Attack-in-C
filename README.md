@@ -7,15 +7,16 @@ Test result have been obtained by letting the attack run 100 times for each conf
 |-----------------------------|---------------|---------------|-----------------------------|-----------------|
 | Average Oracle Queries      | 21355 / 10704 | 21571 / 10805 |          19727 / 9447       |   15645 / 5649  |
 | Average queries for step2a  |  8545 / 2618  |  8004 / 2398  |           6916 / 2244       |    2078 / 104   |
-| Average run time            |   4.97s / -   |  4.9s / 2.2s  |          4.59s / 1.13s      |   3.5s / 1.33s  |
+| Average run time            | 4.97s / 1.26s |  4.9s / 2.2s  |          4.59s / 1.13s      |   3.5s / 1.33s  |
 
 
 Below is the table for the results achieved by modifying the original python implementation to mirror the improvements.
 
-|                             | Base Attack | Trimming   |       Improved Step Two     | Fully optimized |
-|-----------------------------|-------------|------------|-----------------------------|-----------------|
-| Average Oracle Queries      |     45350   |   38515    |             42010           |       7049      |
-| Average queries for step2a  |     40021   |   33197    |             36681           |       1830      |
+|                             |   Base Attack  |   Trimming   |       Improved Step Two     | Fully optimized |
+|-----------------------------|----------------|--------------|-----------------------------|-----------------|
+| Average Oracle Queries      |  45350 / 12106 | 38515 / 4072 |          42010 / 12106      |   7049 / 3240   |
+| Average queries for step2a  |  40021 / 8295  | 33197 / 158  |          36681 / 8295       |   1730 / 8      |
+| Average run time            |  10.8s / 2.89s | 9.2s / 0.87s |          10.6s / 2.84s      |   1.6s / 0.68s  |
 
 - On line 221 and 222 we can set the values of a and b to B2 and B3 - 1 to undo the trimming
 - I added an additional function "step2Base" that can be used to swap out the improvements

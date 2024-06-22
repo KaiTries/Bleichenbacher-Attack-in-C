@@ -218,8 +218,8 @@ def step_1():
     c_0 = binding
     M = [(2 * B, (3 * B) - 1)]
     trimming()
-    a = M[0][0] #int(ceil((2 * B) * (1 / mintrim)))
-    b = M[0][1] #int(floor(((3 * B) - 1) * (1 / maxtrim)))
+    a = int(ceil((2 * B) * (1 / mintrim)))
+    b = int(floor(((3 * B) - 1) * (1 / maxtrim)))
     M = [(a, b)]
     list_M.append(M)
     i = i + 1
@@ -359,6 +359,7 @@ def main(ciphertext):
     global counter
     global counter2
     global counter3
+    global duration
     global bottom
     global top
     global list_s
@@ -375,7 +376,7 @@ def main(ciphertext):
     list_M = []
     step_1()
     t0 = time.time()
-    step_2aBasic()
+    step_2a()
     step_3()
     while len(list_M[i]) != 1 or list_M[i][0][0] != list_M[i][0][1]:
         i = i + 1
@@ -401,6 +402,7 @@ def test(x):
     Oracle_times = []
     trimmercount = []
     oracle2a = []
+    times = []
     list2b = []
     u = 1
     for u in range(1, (x + 1)):
@@ -415,9 +417,11 @@ def test(x):
         Oracle_times.append(counter + counter2)
         trimmercount.append(counter2 - 500)
         oracle2a.append(counter3)
+        times.append(duration)
         u = u + 1
         print("Overall Oracle Calls: Mean: {}, Median: {}".format(np.mean(Oracle_times), np.median(Oracle_times)))
         print("Step 2a Oracle Calls: Mean: {}, Median: {}".format(np.mean(oracle2a), np.median(oracle2a)))
+        print("Overall time taken  : Mean: {}, Median: {}".format(np.mean(times), np.median(times)))
     print("{} seeds have entered step 2b".format(len(list2b)))
     print("The seeds that entered step 2b are {}".format(list2b))
     print("The list of oracle trimmer calls is {}".format(trimmercount))

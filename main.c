@@ -79,7 +79,7 @@ int main() {
     gmp_randstate_t state;
     gmp_randinit_default(state);
     mpz_init(m); mpz_init(c);
-    int iterations = 100;
+    int iterations = 1000;
     //get_user_input(&m);
     initSetup();
 
@@ -96,9 +96,8 @@ int main() {
     int allCalls[iterations];
     int alls2Calls[iterations];
     double allrTimes[iterations];
-    int calls = 0;
-    int s2aCalls = 0;
-    double rTime = 0;
+    int calls, s2aCalls;
+    double rTime;
     double totalCalls = 0, totals2aCalls = 0, totalrTime = 0;
     for (size_t i = 0; i < iterations; i++)
     {
@@ -106,7 +105,7 @@ int main() {
       calls = s2aCalls = rTime = 0;
       setup(state);
       set_current_c(i,&c,&m, state);
-      optimizedWithoutTrimmers(&c,&calls, &s2aCalls, &rTime );
+      fullyOptimizedAttack(&c,&calls, &s2aCalls, &rTime );
       printf("Original Message: %s\n", user_input_copy);
       allCalls[i] = calls;
       alls2Calls[i] = s2aCalls;
