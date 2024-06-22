@@ -444,7 +444,7 @@ void baseAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     free_interval_set(&set);
 }
 
-void trimmersOnly(mpz_t *c) {
+void trimmersOnly(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     // ListOfIntervals = [(2B, 3B - 1)]
     oracleCalls = 0;
     calls2a = 0;
@@ -517,6 +517,10 @@ void trimmersOnly(mpz_t *c) {
     printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
+    *calls += oracleCalls;
+    *s2aCalls += calls2a;
+    *rTime += cpu_time_used;
+
 
     mpz_clear(a);
     mpz_clear(b);
@@ -527,7 +531,7 @@ void trimmersOnly(mpz_t *c) {
     free_interval_set(&set);
 }
 
-void optimizedWithoutTrimmers(mpz_t *c) {
+void optimizedWithoutTrimmers(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     oracleCalls = 0;
     calls2a = 0;
     // ListOfIntervals = [(2B, 3B - 1)]
@@ -588,6 +592,10 @@ void optimizedWithoutTrimmers(mpz_t *c) {
     printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
+    *calls += oracleCalls;
+    *s2aCalls += calls2a;
+    *rTime += cpu_time_used;
+
 
     mpz_clear(a);
     mpz_clear(b);
@@ -667,7 +675,7 @@ void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
     *calls += oracleCalls;
-    *s2aCalls += oracleCalls;
+    *s2aCalls += calls2a;
     *rTime += cpu_time_used;
 
     mpz_clear(a);

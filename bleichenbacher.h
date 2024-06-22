@@ -15,10 +15,10 @@ void findNextS_iteratively(mpz_t *c, mpz_t *s, mpz_t *a, mpz_t *b);
 void baseAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime);
 
 // base bleichenbacher but with trimmed initial interval
-void trimmersOnly(mpz_t *c);
+void trimmersOnly(mpz_t *c, int *calls, int *s2aCalls, double *rTime);
 
 // All optimizations except trimmers
-void optimizedWithoutTrimmers(mpz_t *c);
+void optimizedWithoutTrimmers(mpz_t *c, int *calls, int *s2aCalls, double *rTime);
 
 // optimized bleichenbacher attack
 void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime);
