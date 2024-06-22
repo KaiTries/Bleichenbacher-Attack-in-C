@@ -21,7 +21,6 @@ Below is the table for the results achieved by modifying the original python imp
 - On line 221 and 222 we can set the values of a and b to B2 and B3 - 1 to undo the trimming
 - I added an additional function "step2Base" that can be used to swap out the improvements
 
-As one can see the results have large differences. So there must be some difference in implementation.  
 
 
 ## The Attack

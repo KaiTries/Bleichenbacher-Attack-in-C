@@ -437,4 +437,4 @@ def test(x):
     print("{} seeds have entered step 2b".format(len(list2b)))
     print("The seeds that entered step 2b are {}".format(list2b))
 
-test(100)
+test(500)
