@@ -1,6 +1,7 @@
 from __future__ import division
 import gmpy2
 from gmpy2 import *
+import math
 from math import gcd, ceil, floor
 import random
 from random import randint
@@ -64,9 +65,7 @@ def oracle(query):
 
 def trimmer_oracle(query):
     global counter2
-    global counter
     counter2 += 1
-    counter += 1
     v = pow(query, d, n)
     if bottom <= v and v <= top:
         return 1
@@ -93,8 +92,10 @@ def lcm(a):
     return lcm
 
 def trimming():
+    global trimmers
     global mintrim
     global maxtrim
+    trimmers = [1]
     trimmersfrac = [1]
     trimmer_limit = 500
     for t in range(3, 4097):
@@ -103,6 +104,7 @@ def trimming():
                 if counter2 < trimmer_limit and (u / t) > (2 / 3) and (u / t) < (3 / 2):
                     if test1(u, t) == 1:
                         if test2(u, t) == 1:
+                            trimmers.append(u / t)
                             trimmersfrac.append(t)
                             break
                         else:
@@ -126,7 +128,7 @@ def trimming():
     mintrim = (ulower / denom)
     upperbottom = denom
     uppertop = ceildiv((3 * denom), 2)
-    while(uppertop - upperbottom) != 1:
+    while(upperbottom + 1) != uppertop:
         u = floordiv((upperbottom + uppertop), 2)
         if test2(u, denom) == 1:
             upperbottom = u
@@ -172,7 +174,6 @@ def primes():
     phi = (p - 1) * (q - 1)
     byte_length_n = (len(hex(n)) - 2) / 2
     k = int(byte_length_n)
-    print("Byte length of n: " + str(k))
     e = 65537
     d = find_inverse(e, phi)
 
@@ -217,39 +218,17 @@ def step_1():
     c_0 = binding
     M = [(2 * B, (3 * B) - 1)]
     trimming()
-    a = (2 * B) # int(ceil((2 * B) * (1 / mintrim)))
-    b = (3 * B) - 1 # int(floor(((3 * B) - 1) * (1 / maxtrim)))
+    a = M[0][0] #int(ceil((2 * B) * (1 / mintrim)))
+    b = M[0][1] #int(floor(((3 * B) - 1) * (1 / maxtrim)))
     M = [(a, b)]
     list_M.append(M)
     i = i + 1
-
-def step_2aBasic():
-    global i
-    global c_0
-    global s
-    global counter2a
-    global counter4
-    s = ceildiv((n + (2 * B)), b)
-    found = False
-    while not found:
-        x = int(pow(s,e,n))
-        attempt2a = int((x * c_0) % n)
-        counter4 += 1
-        counter2a += 1
-        if oracle(attempt2a) == 1:
-            list_s.append(int(s))
-            found = True
-            break
-        else:
-            s = s + 1
-            continue
 
 def step_2a():
     global i
     global c_0
     global s
-    global counter4
-    global counter2a
+    global counter3
     s = ceildiv((n + (2 * B)), b)
     found = False
     while not found:
@@ -257,8 +236,7 @@ def step_2a():
         if s >= ceildiv(((2 * B) + ((r + 1) * n)), b):
             x = int(pow(s, e, n))
             attempt2a = int((x * c_0) % n)
-            counter4 += 1
-            counter2a += 1
+            counter3+=1
             if oracle(attempt2a) == 1:
                 list_s.append(int(s))
                 found = True
@@ -322,7 +300,6 @@ def step_2c():
     global i
     global c_0
     global s
-    global counter3
     if i > 1 and len(list_M[i - 1]) == 1:
         found = False
         r = ceildiv(2 * (((list_M[i - 1][0][1] * list_s[i - 1]) - (2 * B))), n)
@@ -331,7 +308,6 @@ def step_2c():
                            ceildiv(((3 * B) + (r * n)), list_M[i - 1][0][0])):
                 z = int(pow(s, e, n))
                 attempt2c = int((z * c_0) % n)
-                counter3+=1
                 if oracle(attempt2c) == 1:
                     found = True
                     list_s.append(int(s))
@@ -364,8 +340,6 @@ def main(ciphertext):
     global counter
     global counter2
     global counter3
-    global counter2a
-    global counter4
     global bottom
     global top
     global list_s
@@ -377,63 +351,57 @@ def main(ciphertext):
     top = ((3 * B) - 1)
     counter = 0
     counter2 = 0
-    counter2a = 0
     counter3 = 0
-    counter4 = 0
     list_s = []
     list_M = []
     step_1()
     t0 = time.time()
     step_2a()
-    #step_3()
-    #while len(list_M[i]) != 1 or list_M[i][0][0] != list_M[i][0][1]:
-     #   i = i + 1
-      #  if i > 1 and len(list_M[i - 1]) > 1:
-       #     step_2b()
-        #    if t not in list2b:
-         #       list2b.append(t)
-     #   elif i > 1 and len(list_M[i - 1]) == 1:
-      #      step_2c()
-       # else:
-        #    print("Error")
-         #   break
-      #  step_3()
-    #else:
-     #   step_4()
+    step_3()
+    while len(list_M[i]) != 1 or list_M[i][0][0] != list_M[i][0][1]:
+        i = i + 1
+        if i > 1 and len(list_M[i - 1]) > 1:
+            step_2b()
+            if t not in list2b:
+                list2b.append(t)
+        elif i > 1 and len(list_M[i - 1]) == 1:
+            step_2c()
+        else:
+            print("Error")
+            break
+        step_3()
+    else:
+        step_4()
     t1 = time.time()
     duration = t1 - t0
-    print("it took {} seconds, and required {} calls to the Oracle". format(duration, counter ))
+    print("it took {} seconds, and required {} calls to the Oracle". format(duration, (counter + counter2)))
     print("It called the oracle for trimming {} times".format(counter2 - 500))
-    print("It called the oracle from step2a: " + str(counter4))
-    #print("It called the oracle from step2c: " + str(counter3))
-
 
 def test(x):
     global list2b
-    global counter2a
     Oracle_times = []
     trimmercount = []
+    oracle2a = []
     list2b = []
-    list2a = []
     u = 1
     for u in range(1, (x + 1)):
         global t
-        t = int("90333" + "99" + str(u))
+        t = int("90000" + "99" + str(u))
         random.seed(t)
         print("Seed {}: {}".format(u,t))
         primes()
         PMS()
         pad()
         main(ciphertext)
-        Oracle_times.append(counter )
+        Oracle_times.append(counter + counter2)
         trimmercount.append(counter2 - 500)
-        list2a.append(counter2a)
+        oracle2a.append(counter3)
         u = u + 1
-        print("Mean: {}, Median: {}".format(np.mean(Oracle_times), np.median(Oracle_times)))
-   # print("{} seeds have entered step 2b".format(len(list2b)))
-   # print("The seeds that entered step 2b are {}".format(list2b))
-   # print("The list of oracle trimmer calls is {}".format(trimmercount))
-   # print("Maximum: {}, Mean: {}, Median: {}".format(max(trimmercount), np.mean(trimmercount), np.median(trimmercount)))
-    print("Average num of calls from step2a: " + str(np.mean(list2a)))
+        print("Overall Oracle Calls: Mean: {}, Median: {}".format(np.mean(Oracle_times), np.median(Oracle_times)))
+        print("Step 2a Oracle Calls: Mean: {}, Median: {}".format(np.mean(oracle2a), np.median(oracle2a)))
+    print("{} seeds have entered step 2b".format(len(list2b)))
+    print("The seeds that entered step 2b are {}".format(list2b))
+    print("The list of oracle trimmer calls is {}".format(trimmercount))
+    print("Maximum: {}, Mean: {}, Median: {}".format(max(trimmercount), np.mean(trimmercount), np.median(trimmercount)))
 
 test(100)
