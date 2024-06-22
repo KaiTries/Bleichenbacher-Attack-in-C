@@ -447,6 +447,7 @@ void baseAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
 void trimmersOnly(mpz_t *c) {
     // ListOfIntervals = [(2B, 3B - 1)]
     oracleCalls = 0;
+    calls2a = 0;
     mpz_t s, a, b, t, ul, uh;
     mpz_init(t);
     mpz_init(ul);
@@ -513,6 +514,7 @@ void trimmersOnly(mpz_t *c) {
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
     printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
@@ -527,7 +529,7 @@ void trimmersOnly(mpz_t *c) {
 
 void optimizedWithoutTrimmers(mpz_t *c) {
     oracleCalls = 0;
-
+    calls2a = 0;
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t s, a, b;
     mpz_init_set(a,B2);
@@ -583,6 +585,7 @@ void optimizedWithoutTrimmers(mpz_t *c) {
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
     printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
 
@@ -594,6 +597,7 @@ void optimizedWithoutTrimmers(mpz_t *c) {
 
 void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     oracleCalls = 0;
+    calls2a = 0;
     // ListOfIntervals = [(2B, 3B - 1)]
     mpz_t s, a, b, t, ul, uh;
     mpz_init(t);
@@ -658,6 +662,7 @@ void fullyOptimizedAttack(mpz_t *c, int *calls, int *s2aCalls, double *rTime) {
     cpu_time_used = ((double) (end_time - start_time)) / CLOCKS_PER_SEC;
     cpu_time_used_2 = ((double) (end_time_2 - start_time_2)) / CLOCKS_PER_SEC;
     printf("Number of oracle calls: %d\n", oracleCalls);
+    printf("Number of calls step2a: %d\n", calls2a);
     printf("Execution time: %f seconds\n", cpu_time_used);
     printf("Time for first s: %f seconds\n", cpu_time_used_2);
 

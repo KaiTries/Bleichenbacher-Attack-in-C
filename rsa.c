@@ -73,6 +73,26 @@ void generate(RSA *rsa, gmp_randstate_ptr state) {
     mpz_nextprime(q,y);
 
     mpz_mul(n,p,q);
+
+    int k = (mpz_sizeinbase(n, 2) + 7) / 8;
+
+    
+    while (k != 128) {
+        mpz_urandomb(x, state, 512);
+        mpz_add(x,x, u);
+        mpz_mod(x,x,t);
+        mpz_urandomb(y,state, 512);
+        mpz_add(y,y,u);
+        mpz_mod(y,y,t);
+        mpz_nextprime(p,x);
+        mpz_nextprime(q,y);
+
+        mpz_mul(n,p,q);
+
+        k = (mpz_sizeinbase(n, 2) + 7) / 8;
+    }
+
+
     mpz_sub_ui(p,p,1);
     mpz_sub_ui(q,q,1);
     mpz_mul(phi, p, q);

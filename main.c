@@ -73,10 +73,11 @@ int main() {
 
     for (size_t i = 0; i < iterations; i++)
     {
+      printf("Iteration no. %zu \n", i + 1);
       setup(state);
       set_current_c(i,&c,&m, state);
-      baseAttack(&c,&calls, &s2aCalls, &rTime );
-      printf("Original Message: %s", user_input_copy);
+      fullyOptimizedAttack(&c,&calls, &s2aCalls, &rTime );
+      printf("Original Message: %s\n", user_input_copy);
     }
 
     printf("Average num of Calls: %d\n", calls / iterations);
