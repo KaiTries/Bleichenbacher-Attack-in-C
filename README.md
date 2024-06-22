@@ -1,13 +1,13 @@
 # Implementation of Bleichenbacher Attack and select optimizations in C
 This repo implements the bleichenbacher attack as described in the original paper, as well as some additional improvements. It is written fully in C and utilizes the gmp library for the large integers.
 ## Results
-Test result have been obtained by letting the attack run 100 times for each configuration.
+Test result have been obtained by letting the attack run 100 times for each configuration. Shown are the Mean and Median Values.
 
-|                             | Base Attack | Trimming   |       Improved Step Two     | Fully optimized |
-|-----------------------------|-------------|------------|-----------------------------|-----------------|
-| Average Oracle Queries      |     21355   |   21571    |            19727            |       15645     |
-| Average queries for step2a  |     8545    |    8004    |             6916            |       2078      |
-| Average run time            |     4.97s   |    4.9s    |            4.59s            |       3.5s      |
+|                             |  Base Attack  |   Trimming    |       Improved Step Two     | Fully optimized |
+|-----------------------------|---------------|---------------|-----------------------------|-----------------|
+| Average Oracle Queries      | 21355 / 10704 | 21571 / 10805 |          19727 / 9447       |   15645 / 5649  |
+| Average queries for step2a  |  8545 / 2618  |  8004 / 2398  |           6916 / 2244       |    2078 / 104   |
+| Average run time            |   4.97s / -   |  4.9s / 2.2s  |          4.59s / 1.13s      |   3.5s / 1.33s  |
 
 
 Below is the table for the results achieved by modifying the original python implementation to mirror the improvements.

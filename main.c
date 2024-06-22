@@ -13,6 +13,31 @@ char encrypted_input[RSA_BLOCK_BYTE_SIZE * 2];
 char decrypted_input_char[RSA_BLOCK_BYTE_SIZE * 2];
 char *message;
 
+int compareInt(const void *a, const void *b) {
+    return (*(int*)a - *(int*)b);
+}
+
+int compareDouble(const void *a, const void *b) {
+  return (*(double*)a - *(double*)b);
+}
+
+double calculateMedianDouble(double *array, int size) {
+    qsort(array, size, sizeof(int), compareDouble);
+    if (size % 2 != 0)
+        return (double)array[size / 2];
+    else
+        return (double)(array[(size - 1) / 2] + array[size / 2]) / 2.0;
+}
+
+double calculateMedianInt(int *array, int size) {
+    qsort(array, size, sizeof(int), compareInt);
+    if (size % 2 != 0)
+        return (double)array[size / 2];
+    else
+        return (double)(array[(size - 1) / 2] + array[size / 2]) / 2.0;
+}
+
+
 void PMS(gmp_randstate_ptr state) {
   mpz_t a, b, f;
   mpz_inits(a,b,f,NULL);
@@ -67,22 +92,36 @@ int main() {
 
     // baseAttack(&c);
 
+
+    int allCalls[iterations];
+    int alls2Calls[iterations];
+    double allrTimes[iterations];
     int calls = 0;
     int s2aCalls = 0;
     double rTime = 0;
-
+    double totalCalls = 0, totals2aCalls = 0, totalrTime = 0;
     for (size_t i = 0; i < iterations; i++)
     {
       printf("Iteration no. %zu \n", i + 1);
+      calls = s2aCalls = rTime = 0;
       setup(state);
       set_current_c(i,&c,&m, state);
-      fullyOptimizedAttack(&c,&calls, &s2aCalls, &rTime );
+      optimizedWithoutTrimmers(&c,&calls, &s2aCalls, &rTime );
       printf("Original Message: %s\n", user_input_copy);
+      allCalls[i] = calls;
+      alls2Calls[i] = s2aCalls;
+      allrTimes[i] = rTime;
+      totalCalls += calls;
+      totals2aCalls += s2aCalls;
+      totalrTime += rTime;
     }
 
-    printf("Average num of Calls: %d\n", calls / iterations);
-    printf("Average num Calls 2a: %d\n", s2aCalls / iterations);
-    printf("average time to fins: %f\n", rTime / iterations);
+    
+
+
+    printf("Total Oracle Calls: Mean: %f Median: %f\n", totalCalls / iterations, calculateMedianInt(allCalls, iterations));
+    printf("Total step2a Calls: Mean: %f Median: %f\n", totals2aCalls / iterations, calculateMedianInt(alls2Calls, iterations));
+    printf("Average Time atk  : Mean: %f Median: %f\n", totalrTime / iterations, calculateMedianDouble(allrTimes, iterations));
 
     mpz_clear(c);
     mpz_clear(m);
