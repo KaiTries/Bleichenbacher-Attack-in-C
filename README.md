@@ -3,11 +3,25 @@ This repo implements the bleichenbacher attack as described in the original pape
 ## Results
 Test result have been obtained by letting the attack run 100 times for each configuration.
 
-|                             | Base Attack | Trimming   | Smarter way to find first s | Fully optimized |
+|                             | Base Attack | Trimming   |       Improved Step Two     | Fully optimized |
 |-----------------------------|-------------|------------|-----------------------------|-----------------|
 | Average Oracle Queries      |     21355   |   21571    |            19727            |       15645     |
 | Average queries for step2a  |     8545    |    8004    |             6916            |       2078      |
-| Average run time            |     4.97s   |    4.9s    |             4.59s           |       3.5s      |
+| Average run time            |     4.97s   |    4.9s    |            4.59s            |       3.5s      |
+
+
+Below is the table for the results achieved by modifying the original python implementation to mirror the improvements.
+
+|                             | Base Attack | Trimming   |       Improved Step Two     | Fully optimized |
+|-----------------------------|-------------|------------|-----------------------------|-----------------|
+| Average Oracle Queries      |     45350   |   38515    |             42010           |       7049      |
+| Average queries for step2a  |     40021   |   33197    |             36681           |       1830      |
+
+- On line 221 and 222 we can set the values of a and b to B2 and B3 - 1 to undo the trimming
+- I added an additional function "step2Base" that can be used to swap out the improvements
+
+As one can see the results have large differences. Except for the average amount of queries for the fully optimized attack all the results differ strongly.
+
 
 ## The Attack
 The Bleichenbacher attack or also called "million messages attack" was invented in 1998 by Daniel Bleichenbacher. It exploited a weakness in the PKCS #1 v1.5 protocol and is one of the most prominent attacks to date. Specifically the attack exploited the response messages that servers would give upon receiving a wrongly formatted message. The PKCS #1 v1.5 protocol states, that if the message received is incorrectly padded, it should return a distinct error code. This leakage of information was enough for Bleichenbacher to devise an algorithm that given any cyphertext c could find a message m that satisfies $ m = c^{d} \mod n $. The algorithm is roughly dividable into three distinct steps: initial setup & finding s iteratively, finding s with only one interval, and computing new intervals. This will go on until there is only one interval of size 1 left.

@@ -224,6 +224,25 @@ def step_1():
     list_M.append(M)
     i = i + 1
 
+def step_2aBasic():
+    global i
+    global c_0
+    global s
+    global counter3
+    s = ceildiv((n + (2 * B)), b)
+    found = False
+    while not found:
+        x = int(pow(s, e, n))
+        attempt2a = int((x * c_0) % n)
+        counter3+=1
+        if oracle(attempt2a) == 1:
+            list_s.append(int(s))
+            found = True
+            break
+        else:
+            s = s + 1
+            continue
+
 def step_2a():
     global i
     global c_0
@@ -356,7 +375,7 @@ def main(ciphertext):
     list_M = []
     step_1()
     t0 = time.time()
-    step_2a()
+    step_2aBasic()
     step_3()
     while len(list_M[i]) != 1 or list_M[i][0][0] != list_M[i][0][1]:
         i = i + 1
