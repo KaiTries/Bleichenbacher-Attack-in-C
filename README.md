@@ -7,7 +7,7 @@ Test result have been obtained by letting the attack run 100 times for each conf
 |-----------------------------|---------------|---------------|-----------------------------|-----------------|
 | Average Oracle Queries      | 21355 / 10704 | 21571 / 10805 |          19727 / 9447       |   15645 / 5649  |
 | Average queries for step2a  |  8545 / 2618  |  8004 / 2398  |           6916 / 2244       |    2078 / 104   |
-| Average run time            | 4.97s / 1.26s |  4.9s / 2.2s  |          4.59s / 1.13s      |   3.5s / 1.33s  |
+| Average run time            | 4.97s / 1.26s |  4.9s / 2.2s  |          4.59s / 1.13s      |   2.9s / 0.47s  |
 
 
 Below is the table for the results achieved by modifying the original python implementation to mirror the improvements.
