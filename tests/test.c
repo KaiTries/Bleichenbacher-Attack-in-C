@@ -93,7 +93,9 @@ void interval_tests() {
 }
 
 void rsa_tests() {
-    setup();
+    gmp_randstate_t state;
+    gmp_randinit_default(state);
+    setup(state);
     mpz_t decrypted_input;
     mpz_t c, m;
     mpz_init(c);
@@ -118,7 +120,9 @@ void rsa_tests() {
 }
 
 void oracle_tests() {
-    setup();
+     gmp_randstate_t state;
+    gmp_randinit_default(state);   
+    setup(state);
     mpz_t c, m, s, a, b;
     mpz_init(c);
     mpz_init(m);
