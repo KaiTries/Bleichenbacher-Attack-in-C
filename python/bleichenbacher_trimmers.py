@@ -230,8 +230,8 @@ def step_1():
     c_0 = binding
     M = [(2 * B, (3 * B) - 1)]
     trimming()
-    a = int(ceil((2 * B) * (1 / mintrim)))
-    b = int(floor(((3 * B) - 1) * (1 / maxtrim)))
+    a = M[0][0] #int(ceil((2 * B) * (1 / mintrim)))
+    b = M[0][1] #int(floor(((3 * B) - 1) * (1 / maxtrim)))
     M = [(a, b)]
     list_M.append(M)
     i = i + 1

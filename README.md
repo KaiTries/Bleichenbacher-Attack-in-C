@@ -1,7 +1,7 @@
 # Implementation of Bleichenbacher Attack and select optimizations in C
 This repo implements the bleichenbacher attack as described in the original paper, as well as some additional improvements. It is written fully in C and utilizes the gmp library for the large integers.
 ## Results
-Test result have been obtained by letting the attack run 100 times for each configuration. Shown are the Mean and Median Values.
+Test result have been obtained by letting the attack run 500 times for each configuration. Shown are the Mean and Median Values.
 
 |                             |  Base Attack  |   Trimming    |       Improved Step Two     | Fully optimized |
 |-----------------------------|---------------|---------------|-----------------------------|-----------------|
@@ -14,9 +14,9 @@ Below is the table for the results achieved by modifying the original python imp
 
 |                             |   Base Attack  |   Trimming   |       Improved Step Two     | Fully optimized |
 |-----------------------------|----------------|--------------|-----------------------------|-----------------|
-| Average Oracle Queries      |  45350 / 12106 | 38515 / 4072 |          42010 / 12106      |   7049 / 3240   |
-| Average queries for step2a  |  40021 / 8295  | 33197 / 158  |          36681 / 8295       |   1730 / 8      |
-| Average run time            |  10.8s / 2.89s | 9.2s / 0.87s |          10.6s / 2.84s      |   1.6s / 0.68s  |
+| Average Oracle Queries      |  45350 / 12106 | 31463 / 11850|          42010 / 12106      |   5127 / 2945   |
+| Average queries for step2a  |  40021 / 8295  | 27133 / 482  |          36681 / 8295       |    798 / 17     |
+| Average run time            |  10.8s / 2.89s | 8.4s / 3.09s |          10.6s / 2.84s      |  1.14s / 0.6s   |
 
 - On line 221 and 222 we can set the values of a and b to B2 and B3 - 1 to undo the trimming
 - I added an additional function "step2Base" that can be used to swap out the improvements
